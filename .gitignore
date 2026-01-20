@@ -27,6 +27,7 @@ yarn-error.log
 /.vscode
 /.zed
 /.junie
+/.ai
 AGENTS.md
 opencode.json
 
