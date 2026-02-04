@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_requirements', function (Blueprint $table) {
+        Schema::create('task_requirements', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('task_id')->constrained();
             $table->foreignId('qualification_id')->constrained();

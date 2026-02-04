@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('resources', function (Blueprint $table) {
+        Schema::create('resources', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->foreignId('resource_type_id')->constrained();
