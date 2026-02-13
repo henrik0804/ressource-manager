@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteUserAction;
 use App\Actions\StoreUserAction;
 use App\Actions\UpdateUserAction;
+use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class UserController extends Controller
+final class UserController
 {
     public function index(Request $request): Response
     {
@@ -36,35 +37,40 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(User $user): RedirectResponse
-    {
-        return $this->backSuccess('User loaded.');
-    }
-
     public function store(StoreUserRequest $request, StoreUserAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($request->validated()),
-            'User created.',
-            'Unable to create user.'
-        );
+        $action->handle($request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'User created.',
+        ]);
     }
 
     public function update(UpdateUserRequest $request, User $user, UpdateUserAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($user, $request->validated()),
-            'User updated.',
-            'Unable to update user.'
-        );
+        $action->handle($user, $request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'User updated.',
+        ]);
     }
 
     public function destroy(DestroyRequest $request, User $user, DeleteUserAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($user),
-            'User deleted.',
-            'Unable to delete user.'
-        );
+        try {
+            $action->handle($user, $request->confirmsDependencyDeletion());
+        } catch (HasDependentRelationshipsException $e) {
+            return redirect()->back()->with([
+                'status' => 'has_dependents',
+                'dependents' => $e->dependents,
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'User deleted.',
+        ]);
     }
 }

@@ -17,12 +17,19 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface FlashData {
+    status: string | null;
+    message: string | null;
+    dependents: Record<string, number> | null;
+}
+
 export type AppPageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     name: string;
     auth: Auth;
     sidebarOpen: boolean;
+    flash: FlashData;
     [key: string]: unknown;
 };
 

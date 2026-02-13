@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Resource;
 use App\Models\ResourceType;
+use App\Models\TaskAssignment;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -45,4 +46,29 @@ test('resources can be managed', function (): void {
     $deleteResponse = from($backUrl)->delete(route('resources.destroy', $resource));
     $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Resource deleted.');
     assertDatabaseMissing('resources', ['id' => $resource->id]);
+});
+
+test('deleting resource with dependents returns has_dependents status', function (): void {
+    $backUrl = '/dashboard';
+    $resource = Resource::factory()->create();
+    TaskAssignment::factory()->create(['resource_id' => $resource->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('resources.destroy', $resource));
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('status', 'has_dependents');
+    assertDatabaseHas('resources', ['id' => $resource->id]);
+});
+
+test('deleting resource with dependents and confirmation cascades', function (): void {
+    $backUrl = '/dashboard';
+    $resource = Resource::factory()->create();
+    $assignment = TaskAssignment::factory()->create(['resource_id' => $resource->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('resources.destroy', $resource), [
+        'confirm_dependency_deletion' => true,
+    ]);
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Resource deleted.');
+    assertDatabaseMissing('resources', ['id' => $resource->id]);
+    assertDatabaseMissing('task_assignments', ['id' => $assignment->id]);
 });

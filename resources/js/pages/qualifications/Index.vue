@@ -56,6 +56,7 @@ function deleteAction(id: number) {
                 empty-message="Keine Qualifikationen gefunden."
                 delete-title="Qualifikation löschen"
                 delete-description="Möchten Sie diese Qualifikation wirklich löschen?"
+                dependency-delete-description="Diese Qualifikation hat abhängige Daten, die unwiderruflich mitgelöscht werden."
             />
         </div>
     </AppLayout>

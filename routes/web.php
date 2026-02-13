@@ -23,16 +23,16 @@ Route::get('/', fn () => Inertia::render('Welcome', [
 Route::get('dashboard', fn () => Inertia::render('Dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::resource('resource-types', ResourceTypeController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('roles', RoleController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('qualifications', QualificationController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('resources', ResourceController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('resource-absences', ResourceAbsenceController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('resource-qualifications', ResourceQualificationController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('tasks', TaskController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('task-requirements', TaskRequirementController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('task-assignments', TaskAssignmentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-    Route::resource('users', UserController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::resource('resource-types', ResourceTypeController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('qualifications', QualificationController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('resources', ResourceController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('resource-absences', ResourceAbsenceController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('resource-qualifications', ResourceQualificationController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('tasks', TaskController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('task-requirements', TaskRequirementController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('task-assignments', TaskAssignmentController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 
 require __DIR__.'/settings.php';

@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteTaskAction;
 use App\Actions\StoreTaskAction;
 use App\Actions\UpdateTaskAction;
+use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class TaskController extends Controller
+final class TaskController
 {
     public function index(Request $request): Response
     {
@@ -35,35 +36,40 @@ class TaskController extends Controller
         ]);
     }
 
-    public function show(Task $task): RedirectResponse
-    {
-        return $this->backSuccess('Task loaded.');
-    }
-
     public function store(StoreTaskRequest $request, StoreTaskAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($request->validated()),
-            'Task created.',
-            'Unable to create task.'
-        );
+        $action->handle($request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Task created.',
+        ]);
     }
 
     public function update(UpdateTaskRequest $request, Task $task, UpdateTaskAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($task, $request->validated()),
-            'Task updated.',
-            'Unable to update task.'
-        );
+        $action->handle($task, $request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Task updated.',
+        ]);
     }
 
     public function destroy(DestroyRequest $request, Task $task, DeleteTaskAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($task),
-            'Task deleted.',
-            'Unable to delete task.'
-        );
+        try {
+            $action->handle($task, $request->confirmsDependencyDeletion());
+        } catch (HasDependentRelationshipsException $e) {
+            return redirect()->back()->with([
+                'status' => 'has_dependents',
+                'dependents' => $e->dependents,
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Task deleted.',
+        ]);
     }
 }

@@ -54,7 +54,8 @@ function deleteAction(id: number) {
                 search-placeholder="Rollen suchen..."
                 empty-message="Keine Rollen gefunden."
                 delete-title="Rolle löschen"
-                delete-description="Möchten Sie diese Rolle wirklich löschen? Benutzer mit dieser Rolle werden davon betroffen."
+                delete-description="Möchten Sie diese Rolle wirklich löschen?"
+                dependency-delete-description="Diese Rolle hat zugewiesene Benutzer, die unwiderruflich mitgelöscht werden."
             />
         </div>
     </AppLayout>

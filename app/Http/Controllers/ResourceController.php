@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteResourceAction;
 use App\Actions\StoreResourceAction;
 use App\Actions\UpdateResourceAction;
+use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreResourceRequest;
 use App\Http\Requests\UpdateResourceRequest;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ResourceController extends Controller
+final class ResourceController
 {
     public function index(Request $request): Response
     {
@@ -36,35 +37,40 @@ class ResourceController extends Controller
         ]);
     }
 
-    public function show(Resource $resource): RedirectResponse
-    {
-        return $this->backSuccess('Resource loaded.');
-    }
-
     public function store(StoreResourceRequest $request, StoreResourceAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($request->validated()),
-            'Resource created.',
-            'Unable to create resource.'
-        );
+        $action->handle($request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Resource created.',
+        ]);
     }
 
     public function update(UpdateResourceRequest $request, Resource $resource, UpdateResourceAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($resource, $request->validated()),
-            'Resource updated.',
-            'Unable to update resource.'
-        );
+        $action->handle($resource, $request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Resource updated.',
+        ]);
     }
 
     public function destroy(DestroyRequest $request, Resource $resource, DeleteResourceAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($resource),
-            'Resource deleted.',
-            'Unable to delete resource.'
-        );
+        try {
+            $action->handle($resource, $request->confirmsDependencyDeletion());
+        } catch (HasDependentRelationshipsException $e) {
+            return redirect()->back()->with([
+                'status' => 'has_dependents',
+                'dependents' => $e->dependents,
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Resource deleted.',
+        ]);
     }
 }

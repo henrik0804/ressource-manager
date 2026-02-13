@@ -73,6 +73,7 @@ function deleteAction(id: number) {
                 empty-message="Keine Benutzer gefunden."
                 delete-title="Benutzer löschen"
                 delete-description="Möchten Sie diesen Benutzer wirklich löschen? Das Benutzerkonto wird unwiderruflich entfernt."
+                dependency-delete-description="Dieser Benutzer hat eine zugeordnete Ressource, die unwiderruflich mitgelöscht wird."
             />
         </div>
     </AppLayout>

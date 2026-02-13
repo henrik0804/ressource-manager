@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Resource;
 use App\Models\Role;
 use App\Models\User;
 
@@ -44,4 +45,29 @@ test('users can be managed', function (): void {
     $deleteResponse = from($backUrl)->delete(route('users.destroy', $managedUser));
     $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'User deleted.');
     assertDatabaseMissing('users', ['id' => $managedUser->id]);
+});
+
+test('deleting user with resource returns has_dependents status', function (): void {
+    $backUrl = '/dashboard';
+    $managedUser = User::factory()->create();
+    Resource::factory()->create(['user_id' => $managedUser->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('users.destroy', $managedUser));
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('status', 'has_dependents');
+    assertDatabaseHas('users', ['id' => $managedUser->id]);
+});
+
+test('deleting user with resource and confirmation cascades', function (): void {
+    $backUrl = '/dashboard';
+    $managedUser = User::factory()->create();
+    $resource = Resource::factory()->create(['user_id' => $managedUser->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('users.destroy', $managedUser), [
+        'confirm_dependency_deletion' => true,
+    ]);
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'User deleted.');
+    assertDatabaseMissing('users', ['id' => $managedUser->id]);
+    assertDatabaseMissing('resources', ['id' => $resource->id]);
 });

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Qualification;
+use App\Models\ResourceQualification;
 use App\Models\ResourceType;
 use App\Models\User;
 
@@ -44,4 +45,29 @@ test('qualifications can be managed', function (): void {
     $deleteResponse = from($backUrl)->delete(route('qualifications.destroy', $qualification));
     $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Qualification deleted.');
     assertDatabaseMissing('qualifications', ['id' => $qualification->id]);
+});
+
+test('deleting qualification with dependents returns has_dependents status', function (): void {
+    $backUrl = '/dashboard';
+    $qualification = Qualification::factory()->create();
+    ResourceQualification::factory()->create(['qualification_id' => $qualification->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('qualifications.destroy', $qualification));
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('status', 'has_dependents');
+    assertDatabaseHas('qualifications', ['id' => $qualification->id]);
+});
+
+test('deleting qualification with dependents and confirmation cascades', function (): void {
+    $backUrl = '/dashboard';
+    $qualification = Qualification::factory()->create();
+    $resourceQualification = ResourceQualification::factory()->create(['qualification_id' => $qualification->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('qualifications.destroy', $qualification), [
+        'confirm_dependency_deletion' => true,
+    ]);
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Qualification deleted.');
+    assertDatabaseMissing('qualifications', ['id' => $qualification->id]);
+    assertDatabaseMissing('resource_qualifications', ['id' => $resourceQualification->id]);
 });

@@ -67,7 +67,8 @@ function deleteAction(id: number) {
                 search-placeholder="Ressourcen suchen..."
                 empty-message="Keine Ressourcen gefunden."
                 delete-title="Ressource löschen"
-                delete-description="Möchten Sie diese Ressource wirklich löschen? Alle zugehörigen Abwesenheiten, Qualifikationen und Zuweisungen werden ebenfalls entfernt."
+                delete-description="Möchten Sie diese Ressource wirklich löschen?"
+                dependency-delete-description="Diese Ressource hat abhängige Daten, die unwiderruflich mitgelöscht werden."
             />
         </div>
     </AppLayout>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Task;
+use App\Models\TaskRequirement;
 use App\Models\User;
 
 use function Pest\Laravel\actingAs;
@@ -49,4 +50,29 @@ test('tasks can be managed', function (): void {
     $deleteResponse = from($backUrl)->delete(route('tasks.destroy', $task));
     $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Task deleted.');
     assertDatabaseMissing('tasks', ['id' => $task->id]);
+});
+
+test('deleting task with dependents returns has_dependents status', function (): void {
+    $backUrl = '/dashboard';
+    $task = Task::factory()->create();
+    TaskRequirement::factory()->create(['task_id' => $task->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('tasks.destroy', $task));
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('status', 'has_dependents');
+    assertDatabaseHas('tasks', ['id' => $task->id]);
+});
+
+test('deleting task with dependents and confirmation cascades', function (): void {
+    $backUrl = '/dashboard';
+    $task = Task::factory()->create();
+    $requirement = TaskRequirement::factory()->create(['task_id' => $task->id]);
+
+    $deleteResponse = from($backUrl)->delete(route('tasks.destroy', $task), [
+        'confirm_dependency_deletion' => true,
+    ]);
+
+    $deleteResponse->assertRedirect($backUrl)->assertSessionHas('message', 'Task deleted.');
+    assertDatabaseMissing('tasks', ['id' => $task->id]);
+    assertDatabaseMissing('task_requirements', ['id' => $requirement->id]);
 });

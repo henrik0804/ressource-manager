@@ -62,7 +62,8 @@ function deleteAction(id: number) {
                 search-placeholder="Ressourcentypen suchen..."
                 empty-message="Keine Ressourcentypen gefunden."
                 delete-title="Ressourcentyp löschen"
-                delete-description="Möchten Sie diesen Ressourcentyp wirklich löschen? Alle zugehörigen Ressourcen und Qualifikationen werden ebenfalls entfernt."
+                delete-description="Möchten Sie diesen Ressourcentyp wirklich löschen?"
+                dependency-delete-description="Dieser Ressourcentyp hat abhängige Daten, die unwiderruflich mitgelöscht werden."
             />
         </div>
     </AppLayout>

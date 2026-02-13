@@ -79,7 +79,8 @@ function deleteAction(id: number) {
                 search-placeholder="Aufgaben suchen..."
                 empty-message="Keine Aufgaben gefunden."
                 delete-title="Aufgabe löschen"
-                delete-description="Möchten Sie diese Aufgabe wirklich löschen? Alle zugehörigen Anforderungen und Zuweisungen werden ebenfalls entfernt."
+                delete-description="Möchten Sie diese Aufgabe wirklich löschen?"
+                dependency-delete-description="Diese Aufgabe hat abhängige Anforderungen und Zuweisungen, die unwiderruflich mitgelöscht werden."
             />
         </div>
     </AppLayout>

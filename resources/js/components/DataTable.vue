@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
@@ -16,6 +16,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import type { AppPageProps } from '@/types';
 import type { Paginated } from '@/types/models';
 
 export interface Column<R> {
@@ -35,6 +36,7 @@ interface Props {
     emptyMessage?: string;
     deleteTitle?: string;
     deleteDescription?: string;
+    dependencyDeleteDescription?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -44,16 +46,22 @@ const props = withDefaults(defineProps<Props>(), {
     deleteTitle: 'Eintrag löschen',
     deleteDescription:
         'Möchten Sie diesen Eintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+    dependencyDeleteDescription:
+        'Dieser Eintrag hat abhängige Daten, die ebenfalls unwiderruflich gelöscht werden. Möchten Sie wirklich fortfahren?',
 });
 
 const emit = defineEmits<{
     (e: 'edit', row: T): void;
 }>();
 
+const page = usePage<AppPageProps>();
+
 const searchValue = ref(props.search);
 const deleteDialogOpen = ref(false);
+const dependencyDialogOpen = ref(false);
 const deletingRow = ref<T | null>(null);
 const isDeleting = ref(false);
+const dependents = ref<Record<string, number> | null>(null);
 
 watch(
     () => props.search,
@@ -61,6 +69,29 @@ watch(
         searchValue.value = value;
     },
 );
+
+const dependencyDetailText = computed(() => {
+    if (!dependents.value) {
+        return '';
+    }
+
+    const labels: Record<string, string> = {
+        resources: 'Ressourcen',
+        qualifications: 'Qualifikationen',
+        users: 'Benutzer',
+        resource_qualifications: 'Ressourcenqualifikationen',
+        task_assignments: 'Aufgabenzuweisungen',
+        resource_absences: 'Abwesenheiten',
+        task_requirements: 'Aufgabenanforderungen',
+        resource: 'Ressource',
+    };
+
+    const parts = Object.entries(dependents.value).map(
+        ([key, count]) => `${count} ${labels[key] ?? key}`,
+    );
+
+    return parts.join(', ');
+});
 
 function onSearch(value: string) {
     router.get(
@@ -75,7 +106,7 @@ function confirmDelete(row: T) {
     deleteDialogOpen.value = true;
 }
 
-function executeDelete() {
+function executeDelete(confirmDependencyDeletion = false) {
     if (!deletingRow.value) {
         return;
     }
@@ -86,12 +117,40 @@ function executeDelete() {
 
     router.delete(action.url, {
         preserveScroll: true,
-        onFinish: () => {
+        data: confirmDependencyDeletion
+            ? { confirm_dependency_deletion: true }
+            : {},
+        onSuccess: () => {
+            const flash = page.props.flash;
+
+            if (flash?.status === 'has_dependents' && flash.dependents) {
+                dependents.value = flash.dependents;
+                deleteDialogOpen.value = false;
+                dependencyDialogOpen.value = true;
+                isDeleting.value = false;
+                return;
+            }
+
             isDeleting.value = false;
             deleteDialogOpen.value = false;
+            dependencyDialogOpen.value = false;
             deletingRow.value = null;
+            dependents.value = null;
+        },
+        onError: () => {
+            isDeleting.value = false;
         },
     });
+}
+
+function executeDependencyDelete() {
+    executeDelete(true);
+}
+
+function closeDependencyDialog() {
+    dependencyDialogOpen.value = false;
+    deletingRow.value = null;
+    dependents.value = null;
 }
 
 function getCellValue(row: T, column: Column<T>): string {
@@ -230,6 +289,20 @@ const paginationInfo = computed(() => {
         confirm-label="Löschen"
         :processing="isDeleting"
         @update:open="deleteDialogOpen = $event"
-        @confirm="executeDelete"
+        @confirm="executeDelete(false)"
+    />
+
+    <ConfirmDialog
+        :open="dependencyDialogOpen"
+        :title="deleteTitle"
+        :description="`${dependencyDeleteDescription} (${dependencyDetailText})`"
+        confirm-label="Endgültig löschen"
+        :processing="isDeleting"
+        @update:open="
+            (val) => {
+                if (!val) closeDependencyDialog();
+            }
+        "
+        @confirm="executeDependencyDelete"
     />
 </template>

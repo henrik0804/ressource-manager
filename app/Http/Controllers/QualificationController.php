@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteQualificationAction;
 use App\Actions\StoreQualificationAction;
 use App\Actions\UpdateQualificationAction;
+use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreQualificationRequest;
 use App\Http\Requests\UpdateQualificationRequest;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class QualificationController extends Controller
+final class QualificationController
 {
     public function index(Request $request): Response
     {
@@ -36,35 +37,40 @@ class QualificationController extends Controller
         ]);
     }
 
-    public function show(Qualification $qualification): RedirectResponse
-    {
-        return $this->backSuccess('Qualification loaded.');
-    }
-
     public function store(StoreQualificationRequest $request, StoreQualificationAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($request->validated()),
-            'Qualification created.',
-            'Unable to create qualification.'
-        );
+        $action->handle($request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Qualification created.',
+        ]);
     }
 
     public function update(UpdateQualificationRequest $request, Qualification $qualification, UpdateQualificationAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($qualification, $request->validated()),
-            'Qualification updated.',
-            'Unable to update qualification.'
-        );
+        $action->handle($qualification, $request->validated());
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Qualification updated.',
+        ]);
     }
 
     public function destroy(DestroyRequest $request, Qualification $qualification, DeleteQualificationAction $action): RedirectResponse
     {
-        return $this->handleAction(
-            fn () => $action->handle($qualification),
-            'Qualification deleted.',
-            'Unable to delete qualification.'
-        );
+        try {
+            $action->handle($qualification, $request->confirmsDependencyDeletion());
+        } catch (HasDependentRelationshipsException $e) {
+            return redirect()->back()->with([
+                'status' => 'has_dependents',
+                'dependents' => $e->dependents,
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'status' => 'success',
+            'message' => 'Qualification deleted.',
+        ]);
     }
 }

@@ -24,6 +24,13 @@ class DestroyRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'confirm_dependency_deletion' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    public function confirmsDependencyDeletion(): bool
+    {
+        return $this->boolean('confirm_dependency_deletion');
     }
 }
