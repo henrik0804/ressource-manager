@@ -11,6 +11,7 @@ use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,8 +35,11 @@ final class UserController
             ->paginate(15)
             ->withQueryString();
 
+        $roles = Role::query()->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('users/Index', [
             'users' => $users,
+            'roles' => $roles,
             'search' => $search,
         ]);
     }

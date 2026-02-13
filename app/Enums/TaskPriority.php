@@ -10,4 +10,14 @@ enum TaskPriority: string
     case Medium = 'medium';
     case High = 'high';
     case Urgent = 'urgent';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Low => 'Niedrig',
+            self::Medium => 'Mittel',
+            self::High => 'Hoch',
+            self::Urgent => 'Dringend',
+        };
+    }
 }

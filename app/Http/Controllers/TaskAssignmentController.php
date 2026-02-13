@@ -11,6 +11,8 @@ use App\Enums\AccessSection;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreTaskAssignmentRequest;
 use App\Http\Requests\UpdateTaskAssignmentRequest;
+use App\Models\Resource;
+use App\Models\Task;
 use App\Models\TaskAssignment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,8 +44,13 @@ final class TaskAssignmentController
             ->paginate(15)
             ->withQueryString();
 
+        $tasks = Task::query()->orderBy('title')->get(['id', 'title']);
+        $resources = Resource::query()->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('task-assignments/Index', [
             'taskAssignments' => $taskAssignments,
+            'tasks' => $tasks,
+            'resources' => $resources,
             'search' => $search,
         ]);
     }

@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteTaskAction;
 use App\Actions\StoreTaskAction;
 use App\Actions\UpdateTaskAction;
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
 use App\Exceptions\HasDependentRelationshipsException;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreTaskRequest;
@@ -33,8 +35,22 @@ final class TaskController
             ->paginate(15)
             ->withQueryString();
 
+        $priorities = collect(TaskPriority::cases())
+            ->map(fn (TaskPriority $priority) => [
+                'value' => $priority->value,
+                'label' => $priority->label(),
+            ]);
+
+        $statuses = collect(TaskStatus::cases())
+            ->map(fn (TaskStatus $status) => [
+                'value' => $status->value,
+                'label' => $status->label(),
+            ]);
+
         return Inertia::render('tasks/Index', [
             'tasks' => $tasks,
+            'priorities' => $priorities,
+            'statuses' => $statuses,
             'search' => $search,
         ]);
     }

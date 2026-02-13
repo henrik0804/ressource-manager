@@ -10,6 +10,7 @@ use App\Actions\UpdateResourceAbsenceAction;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreResourceAbsenceRequest;
 use App\Http\Requests\UpdateResourceAbsenceRequest;
+use App\Models\Resource;
 use App\Models\ResourceAbsence;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,8 +33,11 @@ final class ResourceAbsenceController
             ->paginate(15)
             ->withQueryString();
 
+        $resources = Resource::query()->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('resource-absences/Index', [
             'resourceAbsences' => $resourceAbsences,
+            'resources' => $resources,
             'search' => $search,
         ]);
     }

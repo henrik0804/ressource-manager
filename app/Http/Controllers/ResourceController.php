@@ -12,6 +12,8 @@ use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreResourceRequest;
 use App\Http\Requests\UpdateResourceRequest;
 use App\Models\Resource;
+use App\Models\ResourceType;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -34,8 +36,13 @@ final class ResourceController
             ->paginate(15)
             ->withQueryString();
 
+        $resourceTypes = ResourceType::query()->orderBy('name')->get(['id', 'name']);
+        $users = User::query()->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('resources/Index', [
             'resources' => $resources,
+            'resourceTypes' => $resourceTypes,
+            'users' => $users,
             'search' => $search,
         ]);
     }

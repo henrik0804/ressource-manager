@@ -7,9 +7,12 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteTaskRequirementAction;
 use App\Actions\StoreTaskRequirementAction;
 use App\Actions\UpdateTaskRequirementAction;
+use App\Enums\QualificationLevel;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreTaskRequirementRequest;
 use App\Http\Requests\UpdateTaskRequirementRequest;
+use App\Models\Qualification;
+use App\Models\Task;
 use App\Models\TaskRequirement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,8 +37,19 @@ final class TaskRequirementController
             ->paginate(15)
             ->withQueryString();
 
+        $tasks = Task::query()->orderBy('title')->get(['id', 'title']);
+        $qualifications = Qualification::query()->orderBy('name')->get(['id', 'name']);
+        $levels = collect(QualificationLevel::cases())
+            ->map(fn (QualificationLevel $level) => [
+                'value' => $level->value,
+                'label' => $level->label(),
+            ]);
+
         return Inertia::render('task-requirements/Index', [
             'taskRequirements' => $taskRequirements,
+            'tasks' => $tasks,
+            'qualifications' => $qualifications,
+            'levels' => $levels,
             'search' => $search,
         ]);
     }

@@ -7,9 +7,12 @@ namespace App\Http\Controllers;
 use App\Actions\DeleteResourceQualificationAction;
 use App\Actions\StoreResourceQualificationAction;
 use App\Actions\UpdateResourceQualificationAction;
+use App\Enums\QualificationLevel;
 use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreResourceQualificationRequest;
 use App\Http\Requests\UpdateResourceQualificationRequest;
+use App\Models\Qualification;
+use App\Models\Resource;
 use App\Models\ResourceQualification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,8 +37,19 @@ final class ResourceQualificationController
             ->paginate(15)
             ->withQueryString();
 
+        $resources = Resource::query()->orderBy('name')->get(['id', 'name']);
+        $qualifications = Qualification::query()->orderBy('name')->get(['id', 'name']);
+        $levels = collect(QualificationLevel::cases())
+            ->map(fn (QualificationLevel $level) => [
+                'value' => $level->value,
+                'label' => $level->label(),
+            ]);
+
         return Inertia::render('resource-qualifications/Index', [
             'resourceQualifications' => $resourceQualifications,
+            'resources' => $resources,
+            'qualifications' => $qualifications,
+            'levels' => $levels,
             'search' => $search,
         ]);
     }

@@ -12,6 +12,7 @@ use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreQualificationRequest;
 use App\Http\Requests\UpdateQualificationRequest;
 use App\Models\Qualification;
+use App\Models\ResourceType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -34,8 +35,11 @@ final class QualificationController
             ->paginate(15)
             ->withQueryString();
 
+        $resourceTypes = ResourceType::query()->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('qualifications/Index', [
             'qualifications' => $qualifications,
+            'resourceTypes' => $resourceTypes,
             'search' => $search,
         ]);
     }
