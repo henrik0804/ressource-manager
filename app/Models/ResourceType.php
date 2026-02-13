@@ -36,7 +36,7 @@ class ResourceType extends Model
      */
     public function resources(): HasMany
     {
-        return $this->hasMany(Resource::class);
+        return $this->hasMany(ResourceModel::class);
     }
 
     /**

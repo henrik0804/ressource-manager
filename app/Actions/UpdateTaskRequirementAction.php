@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Enums\QualificationLevel;
 use App\Models\TaskRequirement;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -17,27 +18,7 @@ final readonly class UpdateTaskRequirementAction
     ) {}
 
     /**
-     * @param array{
-     *   task_id?: int|null,
-     *   task?: array{
-     *     title: string,
-     *     description?: string|null,
-     *     starts_at: \DateTimeInterface|string,
-     *     ends_at: \DateTimeInterface|string,
-     *     effort_value: float|int|string,
-     *     effort_unit: string,
-     *     priority: string,
-     *     status: string
-     *   }|null,
-     *   qualification_id?: int|null,
-     *   qualification?: array{
-     *     name: string,
-     *     description?: string|null,
-     *     resource_type_id?: int|null,
-     *     resource_type?: array{name: string, description?: string|null}|null
-     *   }|null,
-     *   required_level?: QualificationLevel|string|null
-     * } $data
+     * @param  array{task_id?: int|null, task?: array{title: string, description?: string|null, starts_at: DateTimeInterface|string, ends_at: DateTimeInterface|string, effort_value: float|int|string, effort_unit: string, priority: string, status: string}|null, qualification_id?: int|null, qualification?: array{name: string, description?: string|null, resource_type_id?: int|null, resource_type?: array{name: string, description?: string|null}|null}|null, required_level?: QualificationLevel|string|null}  $data
      */
     public function handle(TaskRequirement $requirement, array $data): TaskRequirement
     {

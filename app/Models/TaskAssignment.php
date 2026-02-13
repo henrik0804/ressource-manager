@@ -65,6 +65,6 @@ class TaskAssignment extends Model
      */
     public function resource(): BelongsTo
     {
-        return $this->belongsTo(Resource::class);
+        return $this->belongsTo(ResourceModel::class);
     }
 }

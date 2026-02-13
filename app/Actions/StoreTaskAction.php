@@ -5,20 +5,12 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Models\Task;
+use DateTimeInterface;
 
 final class StoreTaskAction
 {
     /**
-     * @param array{
-     *   title: string,
-     *   description?: string|null,
-     *   starts_at: \DateTimeInterface|string,
-     *   ends_at: \DateTimeInterface|string,
-     *   effort_value: float|int|string,
-     *   effort_unit: string,
-     *   priority: string,
-     *   status: string
-     * } $data
+     * @param  array{title: string, description?: string|null, starts_at: DateTimeInterface|string, ends_at: DateTimeInterface|string, effort_value: float|int|string, effort_unit: string, priority: string, status: string}  $data
      */
     public function handle(array $data): Task
     {

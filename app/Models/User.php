@@ -85,6 +85,6 @@ class User extends Authenticatable
      */
     public function resource(): HasOne
     {
-        return $this->hasOne(Resource::class);
+        return $this->hasOne(ResourceModel::class);
     }
 }

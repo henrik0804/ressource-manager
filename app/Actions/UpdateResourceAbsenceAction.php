@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Models\ResourceAbsence;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -15,27 +16,7 @@ final readonly class UpdateResourceAbsenceAction
     ) {}
 
     /**
-     * @param array{
-     *   resource_id?: int|null,
-     *   resource?: array{
-     *     name: string,
-     *     resource_type_id?: int|null,
-     *     resource_type?: array{name: string, description?: string|null}|null,
-     *     capacity_value?: float|int|string|null,
-     *     capacity_unit?: string|null,
-     *     user_id?: int|null,
-     *     user?: array{
-     *       name: string,
-     *       email: string,
-     *       password: string,
-     *       role_id?: int|null,
-     *       role?: array{name: string, description?: string|null}|null
-     *     }|null
-     *   }|null,
-     *   starts_at?: \DateTimeInterface|string,
-     *   ends_at?: \DateTimeInterface|string,
-     *   recurrence_rule?: string|null
-     * } $data
+     * @param  array{resource_id?: int|null, resource?: array{name: string, resource_type_id?: int|null, resource_type?: array{name: string, description?: string|null}|null, capacity_value?: float|int|string|null, capacity_unit?: string|null, user_id?: int|null, user?: array{name: string, email: string, password: string, role_id?: int|null, role?: array{name: string, description?: string|null}|null}|null}|null, starts_at?: DateTimeInterface|string, ends_at?: DateTimeInterface|string, recurrence_rule?: string|null}  $data
      */
     public function handle(ResourceAbsence $absence, array $data): ResourceAbsence
     {
