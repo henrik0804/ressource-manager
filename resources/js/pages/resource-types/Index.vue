@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/ResourceTypeController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/resource-types';
 import type { BreadcrumbItem } from '@/types';
 import type { Paginated, ResourceType } from '@/types/models';
+
+import ResourceTypeForm from './ResourceTypeForm.vue';
 
 interface Props {
     resourceTypes: Paginated<ResourceType>;
@@ -41,6 +46,19 @@ const columns: Column<ResourceType>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingResourceType = ref<ResourceType | null>(null);
+
+function openCreate() {
+    editingResourceType.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(resourceType: ResourceType) {
+    editingResourceType.value = resourceType;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -64,7 +82,21 @@ function deleteAction(id: number) {
                 delete-title="Ressourcentyp löschen"
                 delete-description="Möchten Sie diesen Ressourcentyp wirklich löschen?"
                 dependency-delete-description="Dieser Ressourcentyp hat abhängige Daten, die unwiderruflich mitgelöscht werden."
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Ressourcentyp erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <ResourceTypeForm
+            :open="formOpen"
+            :resource-type="editingResourceType"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

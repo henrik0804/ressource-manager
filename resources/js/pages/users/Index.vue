@@ -1,20 +1,26 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/UserController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/users';
 import type { BreadcrumbItem } from '@/types';
-import type { Paginated } from '@/types/models';
+import type { Paginated, Role } from '@/types/models';
+
+import UserForm from './UserForm.vue';
 
 interface UserRow {
     id: number;
     name: string;
     email: string;
     role?: { id: number; name: string } | null;
+    role_id?: number;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -23,6 +29,7 @@ interface UserRow {
 
 interface Props {
     users: Paginated<UserRow>;
+    roles: Pick<Role, 'id' | 'name'>[];
     search: string;
 }
 
@@ -51,6 +58,19 @@ const columns: Column<UserRow>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingUser = ref<UserRow | null>(null);
+
+function openCreate() {
+    editingUser.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(user: UserRow) {
+    editingUser.value = user;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -74,7 +94,22 @@ function deleteAction(id: number) {
                 delete-title="Benutzer löschen"
                 delete-description="Möchten Sie diesen Benutzer wirklich löschen? Das Benutzerkonto wird unwiderruflich entfernt."
                 dependency-delete-description="Dieser Benutzer hat eine zugeordnete Ressource, die unwiderruflich mitgelöscht wird."
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Benutzer erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <UserForm
+            :open="formOpen"
+            :user="editingUser"
+            :roles="roles"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

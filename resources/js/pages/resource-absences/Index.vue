@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/ResourceAbsenceController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/resource-absences';
 import type { BreadcrumbItem } from '@/types';
-import type { Paginated, ResourceAbsence } from '@/types/models';
+import type { Paginated, Resource, ResourceAbsence } from '@/types/models';
+
+import ResourceAbsenceForm from './ResourceAbsenceForm.vue';
 
 interface Props {
     resourceAbsences: Paginated<ResourceAbsence>;
+    resources: Pick<Resource, 'id' | 'name'>[];
     search: string;
 }
 
@@ -55,6 +61,19 @@ const columns: Column<ResourceAbsence>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingResourceAbsence = ref<ResourceAbsence | null>(null);
+
+function openCreate() {
+    editingResourceAbsence.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(resourceAbsence: ResourceAbsence) {
+    editingResourceAbsence.value = resourceAbsence;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -77,7 +96,22 @@ function deleteAction(id: number) {
                 empty-message="Keine Abwesenheiten gefunden."
                 delete-title="Abwesenheit löschen"
                 delete-description="Möchten Sie diese Abwesenheit wirklich löschen?"
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Abwesenheit erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <ResourceAbsenceForm
+            :open="formOpen"
+            :resource-absence="editingResourceAbsence"
+            :resources="resources"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

@@ -1,17 +1,24 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/ResourceController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/resources';
-import type { BreadcrumbItem } from '@/types';
-import type { Paginated, Resource } from '@/types/models';
+import type { BreadcrumbItem, User } from '@/types';
+import type { Paginated, Resource, ResourceType } from '@/types/models';
+
+import ResourceForm from './ResourceForm.vue';
 
 interface Props {
     resources: Paginated<Resource>;
+    resourceTypes: Pick<ResourceType, 'id' | 'name'>[];
+    users: Pick<User, 'id' | 'name'>[];
     search: string;
 }
 
@@ -46,6 +53,19 @@ const columns: Column<Resource>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingResource = ref<Resource | null>(null);
+
+function openCreate() {
+    editingResource.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(resource: Resource) {
+    editingResource.value = resource;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -69,7 +89,23 @@ function deleteAction(id: number) {
                 delete-title="Ressource löschen"
                 delete-description="Möchten Sie diese Ressource wirklich löschen?"
                 dependency-delete-description="Diese Ressource hat abhängige Daten, die unwiderruflich mitgelöscht werden."
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Ressource erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <ResourceForm
+            :open="formOpen"
+            :resource="editingResource"
+            :resource-types="resourceTypes"
+            :users="users"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

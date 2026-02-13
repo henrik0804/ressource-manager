@@ -1,19 +1,25 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Plus } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/TaskAssignmentController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AccessSections } from '@/lib/access-sections';
 import { index } from '@/routes/task-assignments';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
-import type { Paginated, TaskAssignment } from '@/types/models';
+import type { Paginated, Resource, Task, TaskAssignment } from '@/types/models';
+
+import TaskAssignmentForm from './TaskAssignmentForm.vue';
 
 interface Props {
     taskAssignments: Paginated<TaskAssignment>;
+    tasks: Pick<Task, 'id' | 'title'>[];
+    resources: Pick<Resource, 'id' | 'name'>[];
     search: string;
 }
 
@@ -74,6 +80,19 @@ const columns: Column<TaskAssignment>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingTaskAssignment = ref<TaskAssignment | null>(null);
+
+function openCreate() {
+    editingTaskAssignment.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(taskAssignment: TaskAssignment) {
+    editingTaskAssignment.value = taskAssignment;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -97,7 +116,23 @@ function deleteAction(id: number) {
                 empty-message="Keine Aufgabenzuweisungen gefunden."
                 delete-title="Aufgabenzuweisung löschen"
                 delete-description="Möchten Sie diese Aufgabenzuweisung wirklich löschen?"
-            />
+                @edit="openEdit"
+            >
+                <template v-if="canManageAssignments" #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Zuweisung erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <TaskAssignmentForm
+            :open="formOpen"
+            :task-assignment="editingTaskAssignment"
+            :tasks="tasks"
+            :resources="resources"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

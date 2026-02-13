@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/RoleController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/roles';
 import type { BreadcrumbItem } from '@/types';
 import type { Paginated, Role } from '@/types/models';
+
+import RoleForm from './RoleForm.vue';
 
 interface Props {
     roles: Paginated<Role>;
@@ -33,6 +38,19 @@ const columns: Column<Role>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingRole = ref<Role | null>(null);
+
+function openCreate() {
+    editingRole.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(role: Role) {
+    editingRole.value = role;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -56,7 +74,21 @@ function deleteAction(id: number) {
                 delete-title="Rolle löschen"
                 delete-description="Möchten Sie diese Rolle wirklich löschen?"
                 dependency-delete-description="Diese Rolle hat zugewiesene Benutzer, die unwiderruflich mitgelöscht werden."
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Rolle erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <RoleForm
+            :open="formOpen"
+            :role="editingRole"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>

@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 import { destroy } from '@/actions/App/Http/Controllers/PermissionController';
 import type { Column } from '@/components/DataTable.vue';
 import DataTable from '@/components/DataTable.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/permissions';
 import type { BreadcrumbItem } from '@/types';
-import type { AccessSection, Paginated, Permission } from '@/types/models';
+import type {
+    AccessSection,
+    Paginated,
+    Permission,
+    Role,
+} from '@/types/models';
+
+import PermissionForm from './PermissionForm.vue';
 
 interface SectionOption {
     value: AccessSection;
@@ -17,6 +27,7 @@ interface SectionOption {
 
 interface Props {
     permissions: Paginated<Permission>;
+    roles: Pick<Role, 'id' | 'name'>[];
     sections: SectionOption[];
     search: string;
 }
@@ -69,6 +80,19 @@ const columns: Column<Permission>[] = [
 function deleteAction(id: number) {
     return destroy(id);
 }
+
+const formOpen = ref(false);
+const editingPermission = ref<Permission | null>(null);
+
+function openCreate() {
+    editingPermission.value = null;
+    formOpen.value = true;
+}
+
+function openEdit(permission: Permission) {
+    editingPermission.value = permission;
+    formOpen.value = true;
+}
 </script>
 
 <template>
@@ -91,7 +115,23 @@ function deleteAction(id: number) {
                 empty-message="Keine Berechtigungen gefunden."
                 delete-title="Berechtigung löschen"
                 delete-description="Möchten Sie diese Berechtigung wirklich löschen?"
-            />
+                @edit="openEdit"
+            >
+                <template #toolbar>
+                    <Button @click="openCreate">
+                        <Plus class="mr-2 size-4" />
+                        Berechtigung erstellen
+                    </Button>
+                </template>
+            </DataTable>
         </div>
+
+        <PermissionForm
+            :open="formOpen"
+            :permission="editingPermission"
+            :roles="roles"
+            :sections="sections"
+            @update:open="formOpen = $event"
+        />
     </AppLayout>
 </template>
