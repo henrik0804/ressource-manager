@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AssigneeStatus;
+use App\Enums\AssignmentSource;
 use App\Models\Resource as ResourceModel;
 use Carbon\CarbonImmutable;
 use Database\Factories\TaskAssignmentFactory;
@@ -18,8 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CarbonImmutable|null $starts_at
  * @property-read CarbonImmutable|null $ends_at
  * @property-read string|null $allocation_ratio
- * @property-read string $assignment_source
- * @property-read string|null $assignee_status
+ * @property-read AssignmentSource $assignment_source
+ * @property-read AssigneeStatus|null $assignee_status
  * @property-read CarbonImmutable|null $created_at
  * @property-read CarbonImmutable|null $updated_at
  */
@@ -49,6 +51,8 @@ class TaskAssignment extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'assignment_source' => AssignmentSource::class,
+            'assignee_status' => AssigneeStatus::class,
         ];
     }
 

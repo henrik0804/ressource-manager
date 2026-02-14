@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\EffortUnit;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use Carbon\CarbonImmutable;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read CarbonImmutable $starts_at
  * @property-read CarbonImmutable $ends_at
  * @property-read string $effort_value
- * @property-read string $effort_unit
+ * @property-read EffortUnit $effort_unit
  * @property-read TaskPriority $priority
  * @property-read TaskStatus $status
  * @property-read CarbonImmutable|null $created_at
@@ -52,6 +53,7 @@ class Task extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'effort_unit' => EffortUnit::class,
             'priority' => TaskPriority::class,
             'status' => TaskStatus::class,
         ];

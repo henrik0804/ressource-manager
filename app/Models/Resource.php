@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CapacityUnit;
 use Carbon\CarbonImmutable;
 use Database\Factories\ResourceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read string $name
  * @property-read int $resource_type_id
  * @property-read string|null $capacity_value
- * @property-read string|null $capacity_unit
+ * @property-read CapacityUnit|null $capacity_unit
  * @property-read int|null $user_id
  * @property-read CarbonImmutable|null $created_at
  * @property-read CarbonImmutable|null $updated_at
@@ -36,6 +37,16 @@ class Resource extends Model
         'capacity_unit',
         'user_id',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'capacity_unit' => CapacityUnit::class,
+        ];
+    }
 
     /**
      * @return BelongsTo<ResourceType, $this>
