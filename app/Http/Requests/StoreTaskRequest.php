@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\EffortUnit;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Task;
@@ -34,7 +35,7 @@ class StoreTaskRequest extends FormRequest
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after_or_equal:starts_at'],
             'effort_value' => ['required', 'numeric', 'min:0'],
-            'effort_unit' => ['required', 'string', 'max:255'],
+            'effort_unit' => ['required', Rule::enum(EffortUnit::class)],
             'priority' => ['required', Rule::enum(TaskPriority::class)],
             'status' => ['required', Rule::enum(TaskStatus::class)],
         ];

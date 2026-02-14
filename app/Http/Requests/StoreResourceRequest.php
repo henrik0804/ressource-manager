@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\CapacityUnit;
 use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreResourceRequest extends FormRequest
 {
@@ -32,7 +34,7 @@ class StoreResourceRequest extends FormRequest
             'resource_type.name' => ['required_with:resource_type', 'string', 'max:255'],
             'resource_type.description' => ['nullable', 'string'],
             'capacity_value' => ['nullable', 'numeric', 'min:0'],
-            'capacity_unit' => ['nullable', 'string', 'max:255'],
+            'capacity_unit' => ['nullable', Rule::enum(CapacityUnit::class)],
             'user_id' => ['nullable', 'integer', 'exists:users,id', 'prohibits:user'],
             'user' => ['array', 'prohibits:user_id'],
             'user.name' => ['required_with:user', 'string', 'max:255'],

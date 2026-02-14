@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\CapacityUnit;
 use App\Enums\QualificationLevel;
 use App\Models\ResourceQualification;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -36,7 +37,7 @@ class StoreResourceQualificationRequest extends FormRequest
             'resource.resource_type.name' => ['required_with:resource.resource_type', 'string', 'max:255'],
             'resource.resource_type.description' => ['nullable', 'string'],
             'resource.capacity_value' => ['nullable', 'numeric', 'min:0'],
-            'resource.capacity_unit' => ['nullable', 'string', 'max:255'],
+            'resource.capacity_unit' => ['nullable', Rule::enum(CapacityUnit::class)],
             'resource.user_id' => ['nullable', 'integer', 'exists:users,id', 'prohibits:resource.user'],
             'resource.user' => ['array', 'prohibits:resource.user_id'],
             'resource.user.name' => ['required_with:resource.user', 'string', 'max:255'],

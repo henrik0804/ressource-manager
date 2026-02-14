@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\EffortUnit;
 use App\Enums\QualificationLevel;
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
 use App\Models\TaskRequirement;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -35,9 +38,9 @@ class StoreTaskRequirementRequest extends FormRequest
             'task.starts_at' => ['required_with:task', 'date'],
             'task.ends_at' => ['required_with:task', 'date', 'after_or_equal:task.starts_at'],
             'task.effort_value' => ['required_with:task', 'numeric', 'min:0'],
-            'task.effort_unit' => ['required_with:task', 'string', 'max:255'],
-            'task.priority' => ['required_with:task', 'string', 'max:255'],
-            'task.status' => ['required_with:task', 'string', 'max:255'],
+            'task.effort_unit' => ['required_with:task', Rule::enum(EffortUnit::class)],
+            'task.priority' => ['required_with:task', Rule::enum(TaskPriority::class)],
+            'task.status' => ['required_with:task', Rule::enum(TaskStatus::class)],
             'qualification_id' => ['required_without:qualification', 'integer', 'exists:qualifications,id', 'prohibits:qualification'],
             'qualification' => ['required_without:qualification_id', 'array', 'prohibits:qualification_id'],
             'qualification.name' => ['required_with:qualification', 'string', 'max:255'],

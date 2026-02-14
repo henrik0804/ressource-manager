@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\AssigneeStatus;
+use App\Enums\AssignmentSource;
+use App\Enums\CapacityUnit;
+use App\Enums\EffortUnit;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\TaskAssignment;
@@ -36,7 +40,7 @@ class StoreTaskAssignmentRequest extends FormRequest
             'task.starts_at' => ['required_with:task', 'date'],
             'task.ends_at' => ['required_with:task', 'date', 'after_or_equal:task.starts_at'],
             'task.effort_value' => ['required_with:task', 'numeric', 'min:0'],
-            'task.effort_unit' => ['required_with:task', 'string', 'max:255'],
+            'task.effort_unit' => ['required_with:task', Rule::enum(EffortUnit::class)],
             'task.priority' => ['required_with:task', Rule::enum(TaskPriority::class)],
             'task.status' => ['required_with:task', Rule::enum(TaskStatus::class)],
             'resource_id' => ['required_without:resource', 'integer', 'exists:resources,id', 'prohibits:resource'],
@@ -47,7 +51,7 @@ class StoreTaskAssignmentRequest extends FormRequest
             'resource.resource_type.name' => ['required_with:resource.resource_type', 'string', 'max:255'],
             'resource.resource_type.description' => ['nullable', 'string'],
             'resource.capacity_value' => ['nullable', 'numeric', 'min:0'],
-            'resource.capacity_unit' => ['nullable', 'string', 'max:255'],
+            'resource.capacity_unit' => ['nullable', Rule::enum(CapacityUnit::class)],
             'resource.user_id' => ['nullable', 'integer', 'exists:users,id', 'prohibits:resource.user'],
             'resource.user' => ['array', 'prohibits:resource.user_id'],
             'resource.user.name' => ['required_with:resource.user', 'string', 'max:255'],
@@ -60,8 +64,8 @@ class StoreTaskAssignmentRequest extends FormRequest
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date'],
             'allocation_ratio' => ['nullable', 'numeric', 'min:0'],
-            'assignment_source' => ['required', 'string', 'max:255'],
-            'assignee_status' => ['nullable', 'string', 'max:255'],
+            'assignment_source' => ['required', Rule::enum(AssignmentSource::class)],
+            'assignee_status' => ['nullable', Rule::enum(AssigneeStatus::class)],
         ];
     }
 }

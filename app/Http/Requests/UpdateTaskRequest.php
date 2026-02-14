@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\EffortUnit;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -33,7 +34,7 @@ class UpdateTaskRequest extends FormRequest
             'starts_at' => ['sometimes', 'date'],
             'ends_at' => ['sometimes', 'date'],
             'effort_value' => ['sometimes', 'numeric', 'min:0'],
-            'effort_unit' => ['sometimes', 'string', 'max:255'],
+            'effort_unit' => ['sometimes', Rule::enum(EffortUnit::class)],
             'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
             'status' => ['sometimes', Rule::enum(TaskStatus::class)],
         ];

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\EffortUnit;
 use App\Enums\QualificationLevel;
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,9 +37,9 @@ class UpdateTaskRequirementRequest extends FormRequest
             'task.starts_at' => ['required_with:task', 'date'],
             'task.ends_at' => ['required_with:task', 'date'],
             'task.effort_value' => ['required_with:task', 'numeric', 'min:0'],
-            'task.effort_unit' => ['required_with:task', 'string', 'max:255'],
-            'task.priority' => ['required_with:task', 'string', 'max:255'],
-            'task.status' => ['required_with:task', 'string', 'max:255'],
+            'task.effort_unit' => ['required_with:task', Rule::enum(EffortUnit::class)],
+            'task.priority' => ['required_with:task', Rule::enum(TaskPriority::class)],
+            'task.status' => ['required_with:task', Rule::enum(TaskStatus::class)],
             'qualification_id' => ['sometimes', 'integer', 'exists:qualifications,id', 'prohibits:qualification'],
             'qualification' => ['sometimes', 'array', 'prohibits:qualification_id'],
             'qualification.name' => ['required_with:qualification', 'string', 'max:255'],
