@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\CheckConflictsController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\QualificationController;
 use App\Http\Controllers\ResourceAbsenceController;
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('tasks', TaskController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('task-requirements', TaskRequirementController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('task-assignments', TaskAssignmentController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('check-conflicts', CheckConflictsController::class)->name('check-conflicts');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 

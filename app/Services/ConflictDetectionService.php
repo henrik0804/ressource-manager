@@ -19,6 +19,7 @@ final class ConflictDetectionService
         DateTimeInterface $startsAt,
         DateTimeInterface $endsAt,
         float|int|string|null $allocationRatio = null,
+        ?int $excludeAssignmentId = null,
     ): ConflictReport {
         $windowStartsAt = $this->toCarbon($startsAt);
         $windowEndsAt = $this->toCarbon($endsAt);
@@ -28,7 +29,7 @@ final class ConflictDetectionService
         }
 
         $report = new ConflictReport;
-        $overlappingAssignments = $this->overlappingAssignments($resource, $windowStartsAt, $windowEndsAt);
+        $overlappingAssignments = $this->overlappingAssignments($resource, $windowStartsAt, $windowEndsAt, $excludeAssignmentId);
 
         if ($overlappingAssignments->isNotEmpty()) {
             $report->add(ConflictType::DoubleBooked, [
@@ -36,18 +37,19 @@ final class ConflictDetectionService
             ]);
         }
 
-        $capacityRatio = $this->normalizeRatio($resource->capacity_value);
+        $capacity = $this->resolveCapacity($resource);
         $requestedAllocation = $this->normalizeRatio($allocationRatio);
         $existingAllocation = $overlappingAssignments->sum(fn (TaskAssignment $assignment): float => $this->normalizeRatio($assignment->allocation_ratio));
 
         $totalAllocation = $requestedAllocation + $existingAllocation;
 
-        if ($totalAllocation > $capacityRatio) {
+        if ($totalAllocation > $capacity) {
             $report->add(ConflictType::Overloaded, [
                 'related_ids' => $overlappingAssignments->pluck('id')->all(),
                 'metrics' => [
-                    'allocation_ratio' => $totalAllocation,
-                    'capacity_ratio' => $capacityRatio,
+                    'total_allocation' => $totalAllocation,
+                    'capacity' => $capacity,
+                    'capacity_unit' => $resource->capacity_unit?->value,
                 ],
             ]);
         }
@@ -74,9 +76,11 @@ final class ConflictDetectionService
         Resource $resource,
         CarbonImmutable $startsAt,
         CarbonImmutable $endsAt,
+        ?int $excludeAssignmentId = null,
     ): Collection {
         return TaskAssignment::query()
             ->where('resource_id', $resource->id)
+            ->when($excludeAssignmentId, fn ($query, $id) => $query->where('id', '!=', $id))
             ->with('task')
             ->get()
             ->filter(function (TaskAssignment $assignment) use ($startsAt, $endsAt): bool {
@@ -102,6 +106,26 @@ final class ConflictDetectionService
         CarbonImmutable $otherEndsAt,
     ): bool {
         return $startsAt->lt($otherEndsAt) && $endsAt->gt($otherStartsAt);
+    }
+
+    /**
+     * Resolve a resource's capacity to a numeric value usable for comparison.
+     *
+     * For HoursPerDay resources, capacity_value represents hours available per day.
+     * For Slots resources, capacity_value represents the number of concurrent slots.
+     * When no unit or value is set, defaults to 1.0 (single-use resource).
+     */
+    private function resolveCapacity(Resource $resource): float
+    {
+        $value = $resource->capacity_value;
+
+        if ($value === null) {
+            return 1.0;
+        }
+
+        $numericValue = (float) $value;
+
+        return $numericValue > 0 ? $numericValue : 1.0;
     }
 
     private function normalizeRatio(float|int|string|null $ratio): float

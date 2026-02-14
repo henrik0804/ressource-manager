@@ -10,12 +10,12 @@ use Illuminate\Support\Collection;
 final class ConflictReport
 {
     /**
-     * @var array<string, list<array{related_ids: list<int>, metrics?: array<string, float|int|null>}>>
+     * @var array<string, list<array{related_ids: list<int>, metrics?: array<string, float|int|string|null>}>>
      */
     private array $conflicts = [];
 
     /**
-     * @param  array{related_ids: list<int>, metrics?: array<string, float|int|null>}  $conflict
+     * @param  array{related_ids: list<int>, metrics?: array<string, float|int|string|null>}  $conflict
      */
     public function add(ConflictType $type, array $conflict): void
     {
@@ -39,13 +39,29 @@ final class ConflictReport
     }
 
     /**
-     * @return Collection<int, array{related_ids: list<int>, metrics?: array<string, float|int|null>}>
+     * @return Collection<int, array{related_ids: list<int>, metrics?: array<string, float|int|string|null>}>
      */
     public function conflictsFor(ConflictType $type): Collection
     {
-        /** @var list<array{related_ids: list<int>, metrics?: array<string, float|int|null>}> $conflicts */
-        $conflicts = $this->conflicts[$type->value] ?? [];
+        /** @phpstan-ignore return.type (Collection template covariance limitation) */
+        return new Collection($this->conflicts[$type->value] ?? []);
+    }
 
-        return collect($conflicts);
+    /**
+     * @return array<string, array{label: string, description: string, entries: list<array{related_ids: list<int>, metrics?: array<string, float|int|string|null>}>}>
+     */
+    public function toArray(): array
+    {
+        $result = [];
+
+        foreach ($this->types() as $type) {
+            $result[$type->value] = [
+                'label' => $type->label(),
+                'description' => $type->description(),
+                'entries' => $this->conflictsFor($type)->all(),
+            ];
+        }
+
+        return $result;
     }
 }
