@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    BarChart3,
     BookOpen,
     Boxes,
     CalendarDays,
@@ -32,7 +33,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { AccessSections, type AccessSection } from '@/lib/access-sections';
-import { dashboard, schedule } from '@/routes';
+import { dashboard, schedule, utilization } from '@/routes';
 import { index as permissionsIndex } from '@/routes/permissions';
 import { index as qualificationsIndex } from '@/routes/qualifications';
 import { index as resourceAbsencesIndex } from '@/routes/resource-absences';
@@ -70,6 +71,20 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
 ];
+
+const employeeNavItems = computed<NavItem[]>(() => {
+    if (!canAccess([AccessSections.EmployeeFeedback])) {
+        return [];
+    }
+
+    return [
+        {
+            title: 'Meine Aufgaben',
+            href: myAssignmentsIndex(),
+            icon: ClipboardCheck,
+        },
+    ];
+});
 
 const resourceNavItems = computed<NavItem[]>(() => {
     if (!canAccess([AccessSections.ResourceManagement])) {
@@ -140,17 +155,25 @@ const taskNavItems = computed<NavItem[]>(() => {
 });
 
 const planningNavItems = computed<NavItem[]>(() => {
-    if (!canAccess([AccessSections.VisualOverview])) {
-        return [];
-    }
+    const items: NavItem[] = [];
 
-    return [
-        {
+    if (canAccess([AccessSections.VisualOverview])) {
+        items.push({
             title: 'Zeitplan',
             href: schedule(),
             icon: CalendarDays,
-        },
-    ];
+        });
+    }
+
+    if (canAccess([AccessSections.UtilizationView])) {
+        items.push({
+            title: 'Auslastung',
+            href: utilization(),
+            icon: BarChart3,
+        });
+    }
+
+    return items;
 });
 
 const adminNavItems = computed<NavItem[]>(() => {
@@ -207,6 +230,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain v-if="employeeNavItems.length" :items="employeeNavItems" />
             <NavMain
                 v-if="resourceNavItems.length"
                 :items="resourceNavItems"
