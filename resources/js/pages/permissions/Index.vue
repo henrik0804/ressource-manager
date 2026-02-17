@@ -90,14 +90,30 @@ const form = useForm({
 });
 
 watch(selectedRoleId, () => {
-    form.permissions = buildPermissionsData(selectedRole.value);
+    const newPerms = buildPermissionsData(selectedRole.value);
+    for (const section of props.sections) {
+        form.permissions[section.value].can_read =
+            newPerms[section.value].can_read;
+        form.permissions[section.value].can_write =
+            newPerms[section.value].can_write;
+        form.permissions[section.value].can_write_owned =
+            newPerms[section.value].can_write_owned;
+    }
     form.clearErrors();
 });
 
 watch(
     () => props.roles,
     () => {
-        form.permissions = buildPermissionsData(selectedRole.value);
+        const newPerms = buildPermissionsData(selectedRole.value);
+        for (const section of props.sections) {
+            form.permissions[section.value].can_read =
+                newPerms[section.value].can_read;
+            form.permissions[section.value].can_write =
+                newPerms[section.value].can_write;
+            form.permissions[section.value].can_write_owned =
+                newPerms[section.value].can_write_owned;
+        }
     },
 );
 
