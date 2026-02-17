@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Concerns\CapacityHelper;
 use App\Models\Resource;
 use App\Models\ResourceAbsence;
 use App\Models\TaskAssignment;
@@ -13,6 +14,8 @@ use Illuminate\Support\Collection;
 
 final class UtilizationService
 {
+    use CapacityHelper;
+
     /**
      * Calculate utilization for all resources within a date range.
      *
@@ -281,43 +284,5 @@ final class UtilizationService
             ->where('ends_at', '>', $start)
             ->get()
             ->groupBy('resource_id');
-    }
-
-    /**
-     * Resolve a resource's capacity to a numeric value per day.
-     *
-     * Mirrors the same logic used in ConflictDetectionService.
-     */
-    private function resolveCapacity(Resource $resource): float
-    {
-        $value = $resource->capacity_value;
-
-        if ($value === null) {
-            return 1.0;
-        }
-
-        $numericValue = (float) $value;
-
-        return $numericValue > 0 ? $numericValue : 1.0;
-    }
-
-    private function normalizeRatio(float|int|string|null $ratio): float
-    {
-        if ($ratio === null) {
-            return 1.0;
-        }
-
-        $value = (float) $ratio;
-
-        return $value < 0 ? 0.0 : $value;
-    }
-
-    private function toCarbon(DateTimeInterface $dateTime): CarbonImmutable
-    {
-        if ($dateTime instanceof CarbonImmutable) {
-            return $dateTime;
-        }
-
-        return CarbonImmutable::instance($dateTime);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Concerns\CapacityHelper;
 use App\Enums\ConflictType;
 use App\Models\Resource;
 use App\Models\ResourceAbsence;
@@ -14,6 +15,8 @@ use Illuminate\Support\Collection;
 
 final class ConflictDetectionService
 {
+    use CapacityHelper;
+
     public function detect(
         Resource $resource,
         DateTimeInterface $startsAt,
@@ -32,8 +35,8 @@ final class ConflictDetectionService
         $overlappingAssignments = $this->overlappingAssignments($resource, $windowStartsAt, $windowEndsAt, $excludeAssignmentId);
 
         $capacity = $this->resolveCapacity($resource);
-        $requestedAllocation = $this->normalizeRatio($allocationRatio);
-        $existingAllocation = $overlappingAssignments->sum(fn (TaskAssignment $assignment): float => $this->normalizeRatio($assignment->allocation_ratio));
+        $requestedAllocation = $this->normalizeRatio($allocationRatio, $capacity);
+        $existingAllocation = $overlappingAssignments->sum(fn (TaskAssignment $assignment): float => $this->normalizeRatio($assignment->allocation_ratio, $capacity));
 
         $totalAllocation = $requestedAllocation + $existingAllocation;
 
@@ -113,49 +116,5 @@ final class ConflictDetectionService
         CarbonImmutable $otherEndsAt,
     ): bool {
         return $startsAt->lt($otherEndsAt) && $endsAt->gt($otherStartsAt);
-    }
-
-    /**
-     * Resolve a resource's capacity to a numeric value usable for comparison.
-     *
-     * For HoursPerDay resources, capacity_value represents hours available per day.
-     * For Slots resources, capacity_value represents the number of concurrent slots.
-     * When no unit or value is set, defaults to 1.0 (single-use resource).
-     */
-    private function resolveCapacity(Resource $resource): float
-    {
-        $value = $resource->capacity_value;
-
-        if ($value === null) {
-            return 1.0;
-        }
-
-        $numericValue = (float) $value;
-
-        return $numericValue > 0 ? $numericValue : 1.0;
-    }
-
-    private function normalizeRatio(float|int|string|null $ratio): float
-    {
-        if ($ratio === null) {
-            return 1.0;
-        }
-
-        $value = (float) $ratio;
-
-        if ($value < 0) {
-            return 0.0;
-        }
-
-        return $value;
-    }
-
-    private function toCarbon(DateTimeInterface $dateTime): CarbonImmutable
-    {
-        if ($dateTime instanceof CarbonImmutable) {
-            return $dateTime;
-        }
-
-        return CarbonImmutable::instance($dateTime);
     }
 }

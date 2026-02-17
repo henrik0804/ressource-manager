@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Concerns\CapacityHelper;
 use App\Enums\AssignmentSource;
 use App\Enums\ConflictType;
 use App\Enums\TaskPriority;
@@ -25,6 +26,8 @@ use Throwable;
 
 final readonly class AutoAssignAction
 {
+    use CapacityHelper;
+
     public function __construct(
         private ConflictDetectionService $conflictDetection,
         private UtilizationService $utilizationService,
@@ -153,7 +156,7 @@ final readonly class AutoAssignAction
 
     /**
      * @param  Collection<int, TaskRequirement>  $requirements
-     * @return Collection<int, \App\Models\Resource>
+     * @return Collection<int, resource>
      */
     private function matchingResources(Collection $requirements): Collection
     {
@@ -498,15 +501,6 @@ final readonly class AutoAssignAction
             'starts_at' => $this->toCarbon($startsAt)->toDateTimeString(),
             'ends_at' => $this->toCarbon($endsAt)->toDateTimeString(),
         ];
-    }
-
-    private function toCarbon(DateTimeInterface $dateTime): CarbonImmutable
-    {
-        if ($dateTime instanceof CarbonImmutable) {
-            return $dateTime;
-        }
-
-        return CarbonImmutable::instance($dateTime);
     }
 
     private function priorityRank(?TaskPriority $priority): int
