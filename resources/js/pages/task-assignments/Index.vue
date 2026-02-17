@@ -42,7 +42,7 @@ interface Props {
     search: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const page = usePage<AppPageProps>();
 
@@ -58,6 +58,21 @@ const canAutoAssign = computed(() => {
     const permission = permissions[AccessSections.AutomatedAssignment];
 
     return permission?.can_write ?? false;
+});
+
+const canPrioritySchedule = computed(() => {
+    const permissions = page.props.auth?.permissions ?? {};
+    const permission = permissions[AccessSections.PriorityScheduling];
+
+    return permission?.can_write ?? false;
+});
+
+const autoAssignDescription = computed(() => {
+    if (canPrioritySchedule.value) {
+        return 'Nicht zugewiesene Aufgaben werden automatisch an verfügbare, qualifizierte Ressourcen mit der geringsten Auslastung zugewiesen. Aufgaben mit niedriger Priorität können bei Bedarf verschoben werden.';
+    }
+
+    return 'Nicht zugewiesene Aufgaben werden automatisch an verfügbare, qualifizierte Ressourcen mit der geringsten Auslastung zugewiesen.';
 });
 
 const autoAssignDialogOpen = ref(false);
@@ -122,6 +137,14 @@ function formatDate(dateString: string | null): string {
     });
 }
 
+const sourceLabels = new Map(
+    props.assignmentSources.map((s) => [s.value, s.label]),
+);
+
+const statusLabels = new Map(
+    props.assigneeStatuses.map((s) => [s.value, s.label]),
+);
+
 const columns: Column<TaskAssignment>[] = [
     {
         key: 'task',
@@ -146,6 +169,16 @@ const columns: Column<TaskAssignment>[] = [
     {
         key: 'assignment_source',
         label: 'Quelle',
+        render: (row) =>
+            sourceLabels.get(row.assignment_source) ?? row.assignment_source,
+    },
+    {
+        key: 'assignee_status',
+        label: 'Status',
+        render: (row) =>
+            row.assignee_status
+                ? (statusLabels.get(row.assignee_status) ?? row.assignee_status)
+                : '—',
     },
 ];
 
@@ -222,7 +255,7 @@ function openEdit(taskAssignment: TaskAssignment) {
         <ConfirmDialog
             :open="autoAssignDialogOpen"
             title="Automatische Zuweisung"
-            description="Nicht zugewiesene Aufgaben werden automatisch an verfügbare, qualifizierte Ressourcen mit der geringsten Auslastung zugewiesen. Fortfahren?"
+            :description="autoAssignDescription"
             confirm-label="Zuweisen"
             variant="default"
             :processing="isAutoAssigning"

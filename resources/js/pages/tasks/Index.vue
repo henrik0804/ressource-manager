@@ -28,7 +28,7 @@ interface Props {
     search: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Aufgaben', href: index().url },
@@ -42,16 +42,22 @@ function formatDate(dateString: string): string {
     });
 }
 
+const statusLabels = new Map(props.statuses.map((s) => [s.value, s.label]));
+
+const priorityLabels = new Map(props.priorities.map((p) => [p.value, p.label]));
+
 const columns: Column<Task>[] = [
     { key: 'title', label: 'Titel' },
     {
         key: 'status',
         label: 'Status',
+        render: (row) => statusLabels.get(row.status) ?? row.status,
         class: 'w-28',
     },
     {
         key: 'priority',
         label: 'Priorität',
+        render: (row) => priorityLabels.get(row.priority) ?? row.priority,
         class: 'w-28',
     },
     {

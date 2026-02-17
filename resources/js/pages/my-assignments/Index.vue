@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { CalendarDays, Clock } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 import { index } from '@/actions/App/Http/Controllers/MyAssignmentController';
 import Heading from '@/components/Heading.vue';
@@ -105,19 +104,6 @@ function taskStatusVariant(
 
     return map[status] ?? 'outline';
 }
-
-const statusCounts = computed(() => {
-    const counts: Record<string, number> = {
-        pending: 0,
-        accepted: 0,
-        in_progress: 0,
-        done: 0,
-        rejected: 0,
-    };
-
-    // This only counts what's on the current page, which is fine for a summary
-    return counts;
-});
 </script>
 
 <template>
@@ -127,7 +113,7 @@ const statusCounts = computed(() => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <Heading
                 title="Meine Aufgaben"
-                description="Hier sehen Sie Ihre zugewiesenen Aufgaben und k\u00F6nnen den Bearbeitungsstatus aktualisieren."
+                description="Hier sehen Sie Ihre zugewiesenen Aufgaben und können den Bearbeitungsstatus aktualisieren."
             />
 
             <div
