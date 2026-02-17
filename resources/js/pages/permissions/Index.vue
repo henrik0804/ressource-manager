@@ -323,17 +323,12 @@ const permissionCount = computed(() => {
                                         <div class="flex items-center gap-2">
                                             <Switch
                                                 :id="`${section.value}-read`"
-                                                :checked="
+                                                v-model="
                                                     form.permissions[
                                                         section.value
                                                     ].can_read
                                                 "
                                                 :disabled="form.processing"
-                                                @update:checked="
-                                                    form.permissions[
-                                                        section.value
-                                                    ].can_read = $event
-                                                "
                                             />
                                             <Label
                                                 :for="`${section.value}-read`"
@@ -346,17 +341,12 @@ const permissionCount = computed(() => {
                                         <div class="flex items-center gap-2">
                                             <Switch
                                                 :id="`${section.value}-write`"
-                                                :checked="
+                                                v-model="
                                                     form.permissions[
                                                         section.value
                                                     ].can_write
                                                 "
                                                 :disabled="form.processing"
-                                                @update:checked="
-                                                    form.permissions[
-                                                        section.value
-                                                    ].can_write = $event
-                                                "
                                             />
                                             <Label
                                                 :for="`${section.value}-write`"
@@ -369,17 +359,12 @@ const permissionCount = computed(() => {
                                         <div class="flex items-center gap-2">
                                             <Switch
                                                 :id="`${section.value}-write-owned`"
-                                                :checked="
+                                                v-model="
                                                     form.permissions[
                                                         section.value
                                                     ].can_write_owned
                                                 "
                                                 :disabled="form.processing"
-                                                @update:checked="
-                                                    form.permissions[
-                                                        section.value
-                                                    ].can_write_owned = $event
-                                                "
                                             />
                                             <Label
                                                 :for="`${section.value}-write-owned`"
