@@ -61,6 +61,8 @@ const selectedRole = computed(() =>
     props.roles.find((role) => role.id === selectedRoleId.value),
 );
 
+const isAdminRole = computed(() => selectedRole.value?.name === 'Admin');
+
 type PermissionsMap = Record<
     string,
     { can_read: boolean; can_write: boolean; can_write_owned: boolean }
@@ -266,6 +268,14 @@ const permissionCount = computed(() => {
                                 v-if="form.hasErrors"
                                 :message="Object.values(form.errors).join(', ')"
                             />
+
+                            <div
+                                v-if="isAdminRole"
+                                class="mb-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200"
+                            >
+                                Die Admin-Rolle hat standardmassig vollen
+                                Zugriff auf alle Bereiche.
+                            </div>
 
                             <div class="divide-y">
                                 <div
