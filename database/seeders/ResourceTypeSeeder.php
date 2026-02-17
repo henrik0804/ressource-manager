@@ -15,10 +15,10 @@ class ResourceTypeSeeder extends Seeder
     public function run(): void
     {
         $resourceTypes = [
-            ['name' => 'Person', 'description' => 'Individual people resources.'],
-            ['name' => 'Team', 'description' => 'Cross-functional group capacity.'],
-            ['name' => 'Room', 'description' => 'Bookable spaces and rooms.'],
-            ['name' => 'Equipment', 'description' => 'Shared tools and assets.'],
+            ['name' => 'Person', 'description' => 'Einzelpersonen als Ressourcen.'],
+            ['name' => 'Team', 'description' => 'Querschnittsteam-Kapazität.'],
+            ['name' => 'Room', 'description' => 'Buchbare Räume und Flächen.'],
+            ['name' => 'Equipment', 'description' => 'Gemeinsam genutzte Werkzeuge und Geräte.'],
         ];
 
         foreach ($resourceTypes as $resourceType) {

@@ -20,14 +20,14 @@ class QualificationSeeder extends Seeder
         $equipmentTypeId = $resourceTypes->get('Equipment');
 
         $qualifications = [
-            ['name' => 'Project Management', 'description' => 'Planning, estimating, and delivery coordination.', 'resource_type_id' => $personTypeId],
-            ['name' => 'Frontend Development', 'description' => 'UI implementation and accessibility.', 'resource_type_id' => $personTypeId],
-            ['name' => 'Backend Development', 'description' => 'API and data layer implementation.', 'resource_type_id' => $personTypeId],
-            ['name' => 'UX Research', 'description' => 'User interviews and usability testing.', 'resource_type_id' => $personTypeId],
-            ['name' => 'Workshop Facilitation', 'description' => 'Leading discovery and alignment sessions.', 'resource_type_id' => $personTypeId],
-            ['name' => 'Forklift Certified', 'description' => 'Certified to operate warehouse forklifts.', 'resource_type_id' => $equipmentTypeId],
-            ['name' => 'Audio Setup', 'description' => 'Configure audio and AV equipment.', 'resource_type_id' => $equipmentTypeId],
-            ['name' => 'Safety Training', 'description' => 'General safety and compliance training.', 'resource_type_id' => null],
+            ['name' => 'Projektmanagement', 'description' => 'Planung, Schätzung und Lieferkoordination.', 'resource_type_id' => $personTypeId],
+            ['name' => 'Frontend-Entwicklung', 'description' => 'UI-Implementierung und Barrierefreiheit.', 'resource_type_id' => $personTypeId],
+            ['name' => 'Backend-Entwicklung', 'description' => 'API- und Datenebenen-Implementierung.', 'resource_type_id' => $personTypeId],
+            ['name' => 'UX-Forschung', 'description' => 'Benutzerinterviews und Usability-Tests.', 'resource_type_id' => $personTypeId],
+            ['name' => 'Workshop-Moderation', 'description' => 'Leitung von Discoverys und Abstimmungssitzungen.', 'resource_type_id' => $personTypeId],
+            ['name' => 'Gabelstapler-Führerschein', 'description' => 'Zertifiziert für den Betrieb von Lagergabelstaplern.', 'resource_type_id' => $equipmentTypeId],
+            ['name' => 'Audio-Einrichtung', 'description' => 'Konfiguration von Audio- und AV-Geräten.', 'resource_type_id' => $equipmentTypeId],
+            ['name' => 'Sicherheitsschulung', 'description' => 'Allgemeine Sicherheits- und Compliance-Schulung.', 'resource_type_id' => null],
         ];
 
         foreach ($qualifications as $qualification) {

@@ -15,11 +15,11 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            ['name' => 'Admin', 'description' => 'Full access to manage settings and data.'],
-            ['name' => 'Planner', 'description' => 'Plans work, assigns resources, and manages timelines.'],
-            ['name' => 'Manager', 'description' => 'Owns delivery outcomes and approves schedules.'],
-            ['name' => 'Contributor', 'description' => 'Executes assigned work items.'],
-            ['name' => 'Viewer', 'description' => 'Read-only access to schedules and reports.'],
+            ['name' => 'Admin', 'description' => 'Voller Zugriff auf alle Einstellungen und Daten.'],
+            ['name' => 'Planner', 'description' => 'Plant Arbeiten, weist Ressourcen zu und verwaltet Zeitpläne.'],
+            ['name' => 'Manager', 'description' => 'Verantwortet Projektergebnisse und genehmigt Zeitpläne.'],
+            ['name' => 'Contributor', 'description' => 'F zugewiesene Arbeitsaufgaben aus.'],
+            ['name' => 'Viewer', 'description' => 'Nur-lesen-Zugriff auf Zeitpläne und Berichte.'],
         ];
 
         foreach ($roles as $role) {

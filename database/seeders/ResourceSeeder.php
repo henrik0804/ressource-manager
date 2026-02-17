@@ -40,7 +40,7 @@ class ResourceSeeder extends Seeder
         }
 
         Resource::query()->create([
-            'name' => 'Design Team',
+            'name' => 'Entwicklungsteam',
             'resource_type_id' => $teamTypeId,
             'capacity_value' => 5,
             'capacity_unit' => CapacityUnit::Slots,
@@ -48,7 +48,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Operations Team',
+            'name' => 'Betriebsteam',
             'resource_type_id' => $teamTypeId,
             'capacity_value' => 4,
             'capacity_unit' => CapacityUnit::Slots,
@@ -56,7 +56,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Conference Room A',
+            'name' => 'Konferenzraum A',
             'resource_type_id' => $roomTypeId,
             'capacity_value' => 1,
             'capacity_unit' => CapacityUnit::Slots,
@@ -64,7 +64,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Workshop Bay',
+            'name' => 'Werkstattbereich',
             'resource_type_id' => $roomTypeId,
             'capacity_value' => 1,
             'capacity_unit' => CapacityUnit::Slots,
@@ -72,7 +72,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Forklift #2',
+            'name' => 'Gabelstapler #2',
             'resource_type_id' => $equipmentTypeId,
             'capacity_value' => 1,
             'capacity_unit' => CapacityUnit::Slots,
@@ -80,7 +80,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => '3D Printers',
+            'name' => '3D-Drucker',
             'resource_type_id' => $equipmentTypeId,
             'capacity_value' => 3,
             'capacity_unit' => CapacityUnit::Slots,
@@ -88,7 +88,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Projector Unit',
+            'name' => 'Beamer',
             'resource_type_id' => $equipmentTypeId,
             'capacity_value' => 1,
             'capacity_unit' => CapacityUnit::Slots,
@@ -96,7 +96,7 @@ class ResourceSeeder extends Seeder
         ]);
 
         Resource::query()->create([
-            'name' => 'Meeting Room B',
+            'name' => 'Besprechungsraum B',
             'resource_type_id' => $roomTypeId,
             'capacity_value' => 1,
             'capacity_unit' => CapacityUnit::Slots,

@@ -19,8 +19,8 @@ class TaskSeeder extends Seeder
     {
         $tasks = [
             [
-                'title' => 'Office Wing Renovation',
-                'description' => 'Complete renovation of the east office wing including furniture removal, painting, new carpet installation, and IT infrastructure setup. Coordination required between facilities, IT, and external contractors.',
+                'title' => 'Büroflügel Renovierung',
+                'description' => 'Komplette Renovierung des östlichen Büroflügels inklusive Möbelentsorgung, Streichen, Teppichverlegung und IT-Infrastruktur. Koordination zwischen Facility Management, IT und externen Handwerkern erforderlich.',
                 'effort_value' => 12,
                 'effort_unit' => EffortUnit::Days,
                 'priority' => TaskPriority::High,
@@ -29,8 +29,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 5,
             ],
             [
-                'title' => 'v3.0 Product Launch Sprint',
-                'description' => 'Final development sprint for the v3.0 product release covering frontend polish, API hardening, performance testing, and launch-day coordination with marketing.',
+                'title' => 'Produktversion 3.0 Start sprint',
+                'description' => 'Abschließender Entwicklungssprint für das Produkt-Release Version 3.0 mit UI-Verbesserungen, API-Optimierung, Performance-Tests und Koordination mit dem Marketing.',
                 'effort_value' => 120,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Urgent,
@@ -39,8 +39,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 8,
             ],
             [
-                'title' => 'Annual Safety Audit',
-                'description' => 'Facility-wide safety compliance audit covering equipment certifications, emergency procedures review, fire safety inspection, and OSHA documentation updates.',
+                'title' => 'Jährliche Sicherheitsprüfung',
+                'description' => 'Werksweite Sicherheits-Compliance-Prüfung inklusive Gerätezertifizierungen, Überprüfung der Notfallverfahren, Brandschutzinspektion und Dokumentationsaktualisierung.',
                 'effort_value' => 18,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::High,
@@ -49,8 +49,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 3,
             ],
             [
-                'title' => 'Client Discovery Workshop — Meridian Corp',
-                'description' => 'Two-day facilitated workshop with Meridian Corp stakeholders to define project scope, success criteria, and resource requirements for their platform migration.',
+                'title' => 'Kunden-Workshop — Meridian Corp',
+                'description' => 'Zweitägiger moderierter Workshop mit den Stakeholdern von Meridian Corp zur Definition des Projektumfangs, Erfolgskriterien und Ressourcenanforderungen für ihre Plattform-Migration.',
                 'effort_value' => 2,
                 'effort_unit' => EffortUnit::Days,
                 'priority' => TaskPriority::Medium,
@@ -59,8 +59,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 2,
             ],
             [
-                'title' => 'Warehouse Inventory Reconciliation',
-                'description' => 'Full cycle count of warehouse inventory with barcode verification, damage assessment, and system reconciliation against ERP records. Includes physical re-shelving of misplaced stock.',
+                'title' => 'Lagerbestands-Ausgleich',
+                'description' => 'Vollständige Inventur mit Barcode-Verifikation, Schadensbewertung und Systemabgleich mit den ERP-Daten. Inklusive physischer Neueinräumung von falsch eingeordnetem Bestand.',
                 'effort_value' => 20,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Medium,
@@ -69,8 +69,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 4,
             ],
             [
-                'title' => 'New Hire Onboarding — Q1 Cohort',
-                'description' => 'Structured onboarding week for six new hires including orientation sessions, safety training, system access setup, and department rotations across design and operations.',
+                'title' => 'Einarbeitung neue Mitarbeiter — Q1 Kohorte',
+                'description' => 'Strukturierte Einarbeitungswoche für sechs neue Mitarbeiter inklusive Orientierungstagen, Sicherheitsschulungen, Systemzugangs-Einrichtung und Abteilungs-Rotationen.',
                 'effort_value' => 3,
                 'effort_unit' => EffortUnit::Days,
                 'priority' => TaskPriority::Medium,
@@ -79,8 +79,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 5,
             ],
             [
-                'title' => 'Trade Show Booth Fabrication',
-                'description' => 'Design, prototype, and assemble exhibition booth for TechExpo 2026 including 3D-printed display elements, branded panels, and AV equipment integration.',
+                'title' => 'Messestand Fertigung',
+                'description' => 'Design, Prototyp und Montage des Messestands für die TechExpo 2026 inklusive 3D-gedruckter Display-Elemente, gebrandeter Platten und AV-Technik-Integration.',
                 'effort_value' => 5,
                 'effort_unit' => EffortUnit::Days,
                 'priority' => TaskPriority::High,
@@ -89,8 +89,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 6,
             ],
             [
-                'title' => 'IT Infrastructure Migration',
-                'description' => 'Migrate on-premise servers to hybrid cloud setup including data backup, network reconfiguration, application testing, DNS cutover, and rollback planning.',
+                'title' => 'IT-Infrastruktur Migration',
+                'description' => 'Migration der lokalen Server in ein Hybrid-Cloud-Setup inklusive Datensicherung, Netzwerk-Konfiguration, Anwendungstests, DNS-Umstellung und Rollback-Planung.',
                 'effort_value' => 80,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Urgent,
@@ -99,8 +99,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 7,
             ],
             [
-                'title' => 'Quarterly Business Review Preparation',
-                'description' => 'Compile department KPIs, financial summaries, and resource utilization reports for the Q1 executive review presentation. Includes slide deck creation and dry-run rehearsal.',
+                'title' => 'Quartalsreview Vorbereitung',
+                'description' => 'Zusammenstellung der Abteilungs-KPIs, Finanzübersichten und Ressourcenauslastungsberichte für die Q1 Geschäftsführungs-Präsentation. Inklusive Folien-Erstellung und Probe-Durchlauf.',
                 'effort_value' => 8,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Low,
@@ -109,8 +109,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 2,
             ],
             [
-                'title' => 'Equipment Maintenance Window',
-                'description' => 'Scheduled preventive maintenance for all warehouse equipment including forklift servicing, 3D printer calibration, conveyor belt inspection, and AV system firmware updates.',
+                'title' => 'Wartungsfenster Ausstattung',
+                'description' => 'Geplante vorbeugende Wartung für alle Lager-Geräte inklusive Gabelstapler-Service, 3D-Drucker-Kalibrierung, Förderband-Inspektion und AV-System Firmware-Updates.',
                 'effort_value' => 16,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Medium,
@@ -119,8 +119,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 3,
             ],
             [
-                'title' => 'Cross-Team Process Optimization',
-                'description' => 'Collaborative process mapping and improvement initiative across design and operations teams to reduce handoff delays, eliminate duplicate reviews, and standardize tooling.',
+                'title' => 'Prozessoptimierung Team-übergreifend',
+                'description' => 'Gemeinsame Prozessanalyse und Verbesserungsinitiative zwischen Entwicklungs- und Betriebsteams zur Reduzierung von Übergabeverzögerungen, Eliminierung doppelter Reviews und Standardisierung der Werkzeuge.',
                 'effort_value' => 3,
                 'effort_unit' => EffortUnit::Days,
                 'priority' => TaskPriority::High,
@@ -129,8 +129,8 @@ class TaskSeeder extends Seeder
                 'duration_days' => 4,
             ],
             [
-                'title' => 'Emergency Drill Coordination',
-                'description' => 'Facility-wide emergency evacuation drill with real-time coordination, post-drill debrief, and procedure documentation updates based on observed gaps.',
+                'title' => 'Notfallübung Koordination',
+                'description' => 'Werksweite Notfall-Evakuierungsübung mit Echtzeit-Koordination, Nachbesprechung und Aktualisierung der Verfahrensdokumentation basierend auf beobachteten Lücken.',
                 'effort_value' => 6,
                 'effort_unit' => EffortUnit::Hours,
                 'priority' => TaskPriority::Urgent,

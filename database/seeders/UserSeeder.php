@@ -28,15 +28,22 @@ class UserSeeder extends Seeder
         $viewerRoleId = $roleIds->get('Viewer', $adminRoleId);
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'user@user.com',
+            'name' => 'Administrator',
+            'email' => 'admin@admin.com',
             'password' => 'password',
             'role_id' => $adminRoleId,
         ]);
 
-        User::factory()->count(2)->create(['role_id' => $plannerRoleId]);
+        User::factory()->create([
+            'name' => 'Mitarbeiter',
+            'email' => 'user@user.com',
+            'password' => 'password',
+            'role_id' => $contributorRoleId,
+        ]);
+
+        User::factory()->count(1)->create(['role_id' => $plannerRoleId]);
         User::factory()->count(2)->create(['role_id' => $managerRoleId]);
-        User::factory()->count(5)->create(['role_id' => $contributorRoleId]);
+        User::factory()->count(4)->create(['role_id' => $contributorRoleId]);
         User::factory()->count(2)->create(['role_id' => $viewerRoleId]);
     }
 }
