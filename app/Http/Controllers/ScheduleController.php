@@ -84,7 +84,7 @@ final class ScheduleController
         return match ($precision) {
             'day' => $start->addDay(),
             'week' => $start->addWeek(),
-            'month' => $start->addMonth(),
+            default => $start->addMonth(),
         };
     }
 
