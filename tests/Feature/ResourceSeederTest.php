@@ -16,10 +16,10 @@ test('resource seeder sets parallel slot capacities for rooms and equipment', fu
     seed(ResourceTypeSeeder::class);
     seed(ResourceSeeder::class);
 
-    $conferenceRoom = Resource::query()->where('name', 'Conference Room A')->first();
-    $workshopBay = Resource::query()->where('name', 'Workshop Bay')->first();
-    $meetingRoom = Resource::query()->where('name', 'Meeting Room B')->first();
-    $printers = Resource::query()->where('name', '3D Printers')->first();
+    $conferenceRoom = Resource::query()->where('name', 'Konferenzraum A')->first();
+    $workshopBay = Resource::query()->where('name', 'Werkstattbereich')->first();
+    $meetingRoom = Resource::query()->where('name', 'Besprechungsraum B')->first();
+    $printers = Resource::query()->where('name', '3D-Drucker')->first();
 
     expect($conferenceRoom)->not->toBeNull();
     expect($workshopBay)->not->toBeNull();
