@@ -131,6 +131,15 @@ class TaskAssignmentSeeder extends Seeder
                 ['name' => 'Werkstattbereich'],
                 ['name' => 'Besprechungsraum B'],
             ],
+            // CONFLICT: Assigns Person 1 during their sickness (absence conflict)
+            'Dringende Reparaturen' => [
+                ['person' => 1],  // Person 1 is currently sick - CONFLICT!
+                ['name' => 'Konferenzraum A'], // Also tries to book same room as existing booking - CONFLICT!
+            ],
+            // CONFLICT: Double booking - Person 2 already assigned to IT-Infrastruktur Migration
+            'Marketing-Fotoshooting' => [
+                ['person' => 2], // Person 2 already assigned to IT task starting day 4 - CONFLICT!
+            ],
         ];
 
         foreach ($plans as $taskTitle => $entries) {

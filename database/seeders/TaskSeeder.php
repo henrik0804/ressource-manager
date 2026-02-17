@@ -138,6 +138,28 @@ class TaskSeeder extends Seeder
                 'start_offset' => -15,
                 'duration_days' => 1,
             ],
+            // CONFLICT TESTING: Absence conflict - overlaps with Person 1's sickness
+            [
+                'title' => 'Dringende Reparaturen',
+                'description' => 'Sofortige Reparaturen an der Produktionslinie due zu einem unerwarteten Geräteausfall.',
+                'effort_value' => 8,
+                'effort_unit' => EffortUnit::Hours,
+                'priority' => TaskPriority::Urgent,
+                'status' => TaskStatus::Planned,
+                'start_offset' => 0,
+                'duration_days' => 2,
+            ],
+            // CONFLICT TESTING: Double booking - Person 2 already assigned during this time
+            [
+                'title' => 'Marketing-Fotoshooting',
+                'description' => 'Professionelles Fotoshooting für die neue Website und Marketingmaterialien.',
+                'effort_value' => 1,
+                'effort_unit' => EffortUnit::Days,
+                'priority' => TaskPriority::Medium,
+                'status' => TaskStatus::Planned,
+                'start_offset' => 4,
+                'duration_days' => 1,
+            ],
         ];
 
         foreach ($tasks as $task) {
