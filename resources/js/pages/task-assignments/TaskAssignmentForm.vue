@@ -46,10 +46,12 @@ interface Props {
     >[];
     assignmentSources: EnumOption[];
     assigneeStatuses: EnumOption[];
+    defaultTaskId?: number | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     taskAssignment: null,
+    defaultTaskId: null,
 });
 
 const emit = defineEmits<{
@@ -58,7 +60,19 @@ const emit = defineEmits<{
 
 const isEditing = () => props.taskAssignment !== null;
 
-function formatDateTimeForInput(dateString: string | null): string {
+function formatDateForInput(dateString: string | null): string {
+    if (!dateString) {
+        return '';
+    }
+
+    const match = dateString.match(
+        /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}):(\d{2}))?/,
+    );
+
+    return match ? match[1] : '';
+}
+
+function formatTimeForInput(dateString: string | null): string {
     if (!dateString) {
         return '';
     }
@@ -71,9 +85,17 @@ function formatDateTimeForInput(dateString: string | null): string {
         return '';
     }
 
-    const [, date, hour, minute] = match;
+    const [, , hour, minute] = match;
 
-    return `${date}T${hour ?? '00'}:${minute ?? '00'}`;
+    return `${hour ?? '00'}:${minute ?? '00'}`;
+}
+
+function combineDateTime(date: string, time: string): string {
+    if (!date) {
+        return '';
+    }
+
+    return `${date}T${time || '00:00'}`;
 }
 
 function toDate(dateString: string | null): Date | null {
@@ -98,6 +120,11 @@ const form = useForm({
     assignment_source: '',
     assignee_status: '',
 });
+
+const startDate = ref('');
+const endDate = ref('');
+const startTime = ref('');
+const endTime = ref('');
 
 const conflictResult = ref<ConflictCheckResponse | null>(null);
 const isCheckingConflicts = ref(false);
@@ -206,8 +233,8 @@ const allocationHint = computed(() => {
         const max = allocationMax.value;
 
         return max !== null
-            ? `Angabe in Stunden pro Tag (max. ${formatQuantity(max)} Std./Tag).`
-            : 'Angabe in Stunden pro Tag.';
+            ? `Wird aus der Tageszeit berechnet (max. ${formatQuantity(max)} Std./Tag).`
+            : 'Wird aus der Tageszeit berechnet.';
     }
 
     if (allocationUnit.value === 'slots') {
@@ -220,6 +247,48 @@ const allocationHint = computed(() => {
 
     return 'Ressource auswählen, um die Auslastungseinheit zu sehen.';
 });
+
+function timeToMinutes(value: string): number | null {
+    if (!value) {
+        return null;
+    }
+
+    const [hours, minutes] = value.split(':').map(Number);
+
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+        return null;
+    }
+
+    return hours * 60 + minutes;
+}
+
+const allocationHours = computed(() => {
+    if (allocationUnit.value !== 'hours_per_day') {
+        return null;
+    }
+
+    const startMinutes = timeToMinutes(startTime.value);
+    const endMinutes = timeToMinutes(endTime.value);
+
+    if (startMinutes === null || endMinutes === null) {
+        return null;
+    }
+
+    const minutes = endMinutes - startMinutes;
+
+    if (minutes <= 0) {
+        return null;
+    }
+
+    return minutes / 60;
+});
+
+const resolvedStartsAt = computed(() =>
+    combineDateTime(startDate.value, startTime.value),
+);
+const resolvedEndsAt = computed(() =>
+    combineDateTime(endDate.value, endTime.value),
+);
 
 function canCheckConflicts(): boolean {
     if (!form.resource_id) {
@@ -356,6 +425,31 @@ function scheduleConflictCheck(): void {
 }
 
 watch(
+    () => [startDate.value, startTime.value],
+    () => {
+        form.starts_at = resolvedStartsAt.value;
+    },
+);
+
+watch(
+    () => [endDate.value, endTime.value],
+    () => {
+        form.ends_at = resolvedEndsAt.value;
+    },
+);
+
+watch(
+    () => [allocationHours.value, allocationUnit.value],
+    ([hours, unit]) => {
+        if (unit !== 'hours_per_day') {
+            return;
+        }
+
+        form.allocation_ratio = hours === null ? '' : Number(hours.toFixed(2));
+    },
+);
+
+watch(
     () => [
         form.resource_id,
         form.task_id,
@@ -374,10 +468,16 @@ watch(
         if (open && props.taskAssignment) {
             form.task_id = props.taskAssignment.task_id;
             form.resource_id = props.taskAssignment.resource_id;
-            form.starts_at = formatDateTimeForInput(
+            startDate.value = formatDateForInput(
                 props.taskAssignment.starts_at,
             );
-            form.ends_at = formatDateTimeForInput(props.taskAssignment.ends_at);
+            startTime.value = formatTimeForInput(
+                props.taskAssignment.starts_at,
+            );
+            endDate.value = formatDateForInput(props.taskAssignment.ends_at);
+            endTime.value = formatTimeForInput(props.taskAssignment.ends_at);
+            form.starts_at = resolvedStartsAt.value;
+            form.ends_at = resolvedEndsAt.value;
             form.allocation_ratio = props.taskAssignment.allocation_ratio ?? '';
             form.assignment_source = props.taskAssignment.assignment_source;
             form.assignee_status = props.taskAssignment.assignee_status ?? '';
@@ -385,6 +485,14 @@ watch(
             form.reset();
             form.clearErrors();
             form.assignment_source = 'manual';
+            startDate.value = '';
+            startTime.value = '';
+            endDate.value = '';
+            endTime.value = '';
+
+            if (props.defaultTaskId) {
+                form.task_id = props.defaultTaskId;
+            }
         }
 
         if (!open) {
@@ -409,14 +517,21 @@ function applyAlternative(resourceId: number): void {
 }
 
 function applyAlternativePeriod(period: ConflictResolutionPeriod): void {
-    form.starts_at = formatDateTimeForInput(period.starts_at);
-    form.ends_at = formatDateTimeForInput(period.ends_at);
+    startDate.value = formatDateForInput(period.starts_at);
+    startTime.value = formatTimeForInput(period.starts_at);
+    endDate.value = formatDateForInput(period.ends_at);
+    endTime.value = formatTimeForInput(period.ends_at);
+    form.starts_at = resolvedStartsAt.value;
+    form.ends_at = resolvedEndsAt.value;
     scheduleConflictCheck();
 }
 
 function submit() {
     const action = isEditing() ? update(props.taskAssignment!.id) : store();
     const method = isEditing() ? 'put' : 'post';
+
+    form.starts_at = resolvedStartsAt.value;
+    form.ends_at = resolvedEndsAt.value;
 
     form[method](action.url, {
         preserveScroll: true,
@@ -497,24 +612,72 @@ function submit() {
 
         <div class="grid grid-cols-2 gap-4">
             <div class="grid gap-2">
-                <Label for="assignment-starts-at">Beginn</Label>
-                <Input
-                    id="assignment-starts-at"
-                    v-model="form.starts_at"
-                    type="datetime-local"
-                    :disabled="form.processing"
-                />
+                <Label>Beginn</Label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="grid gap-1">
+                        <Label
+                            for="assignment-start-date"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Datum
+                        </Label>
+                        <Input
+                            id="assignment-start-date"
+                            v-model="startDate"
+                            type="date"
+                            :disabled="form.processing"
+                        />
+                    </div>
+                    <div class="grid gap-1">
+                        <Label
+                            for="assignment-start-time"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Uhrzeit
+                        </Label>
+                        <Input
+                            id="assignment-start-time"
+                            v-model="startTime"
+                            type="time"
+                            :disabled="form.processing"
+                        />
+                    </div>
+                </div>
                 <InputError :message="form.errors.starts_at" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="assignment-ends-at">Ende</Label>
-                <Input
-                    id="assignment-ends-at"
-                    v-model="form.ends_at"
-                    type="datetime-local"
-                    :disabled="form.processing"
-                />
+                <Label>Ende</Label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="grid gap-1">
+                        <Label
+                            for="assignment-end-date"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Datum
+                        </Label>
+                        <Input
+                            id="assignment-end-date"
+                            v-model="endDate"
+                            type="date"
+                            :disabled="form.processing"
+                        />
+                    </div>
+                    <div class="grid gap-1">
+                        <Label
+                            for="assignment-end-time"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Uhrzeit
+                        </Label>
+                        <Input
+                            id="assignment-end-time"
+                            v-model="endTime"
+                            type="time"
+                            :disabled="form.processing"
+                        />
+                    </div>
+                </div>
                 <InputError :message="form.errors.ends_at" />
             </div>
         </div>
@@ -529,7 +692,9 @@ function submit() {
                 :max="allocationMax ?? undefined"
                 :step="allocationStep"
                 :placeholder="allocationPlaceholder"
-                :disabled="form.processing"
+                :disabled="
+                    form.processing || allocationUnit === 'hours_per_day'
+                "
             />
             <InputError :message="form.errors.allocation_ratio" />
             <p class="-mt-1 text-xs text-muted-foreground">
