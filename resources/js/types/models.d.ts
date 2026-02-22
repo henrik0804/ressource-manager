@@ -193,9 +193,48 @@ export interface AutoAssignRescheduledAssignment {
     ends_at: string | null;
 }
 
+export interface AutoAssignAssignedResource {
+    id: number;
+    name: string;
+    allocation_ratio: number;
+}
+
+export interface AutoAssignAssignedTask {
+    task: {
+        id: number;
+        title: string;
+        priority: TaskPriority;
+        starts_at: string | null;
+        ends_at: string | null;
+        effort_value: number;
+        effort_unit: EffortUnit;
+    };
+    resources: AutoAssignAssignedResource[];
+}
+
+export type AutoAssignSkipReason =
+    | 'missing_dates'
+    | 'missing_effort'
+    | 'no_qualified_resources'
+    | 'resource_conflicts'
+    | 'insufficient_capacity';
+
+export interface AutoAssignSkippedTask {
+    task: {
+        id: number;
+        title: string;
+        priority: TaskPriority;
+        starts_at: string | null;
+        ends_at: string | null;
+    };
+    reason: AutoAssignSkipReason;
+}
+
 export interface AutoAssignResponse {
     assigned: number;
     skipped: number;
+    assigned_tasks: AutoAssignAssignedTask[];
+    skipped_tasks: AutoAssignSkippedTask[];
     rescheduled: AutoAssignRescheduledAssignment[];
     suggestions: AutoAssignSuggestion[];
 }

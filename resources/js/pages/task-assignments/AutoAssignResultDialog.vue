@@ -2,6 +2,7 @@
 import {
     ArrowRightLeft,
     CheckCircle,
+    Clock,
     SkipForward,
     TriangleAlert,
     User,
@@ -21,7 +22,9 @@ import {
 } from '@/components/ui/dialog';
 import type {
     AutoAssignResponse,
+    AutoAssignSkipReason,
     AutoAssignSuggestion,
+    EffortUnit,
     TaskPriority,
 } from '@/types/models';
 
@@ -55,6 +58,19 @@ const conflictTypeLabels: Record<string, string> = {
     double_booked: 'Doppelbuchung',
     overloaded: 'Überlastet',
     absent: 'Abwesend',
+};
+
+const skipReasonLabels: Record<AutoAssignSkipReason, string> = {
+    missing_dates: 'Fehlende Start-/Enddaten',
+    missing_effort: 'Fehlender oder ungültiger Aufwand',
+    no_qualified_resources: 'Keine qualifizierten Ressourcen verfügbar',
+    resource_conflicts: 'Alle qualifizierten Ressourcen haben Konflikte',
+    insufficient_capacity: 'Nicht genügend Kapazität verfügbar',
+};
+
+const effortUnitLabels: Record<EffortUnit, string> = {
+    hours: 'Std.',
+    days: 'Tage',
 };
 
 function priorityBadgeVariant(
@@ -108,6 +124,14 @@ function formatPeriod(start: string | null, end: string | null): string {
     }
 
     return `${formatDateTime(start)} – ${formatDateTime(end)}`;
+}
+
+function formatAllocation(ratio: number): string {
+    return `${ratio} Std./Tag`;
+}
+
+function formatEffort(value: number, unit: EffortUnit): string {
+    return `${value} ${effortUnitLabels[unit] ?? unit}`;
 }
 
 function hasSuggestions(result: AutoAssignResponse): boolean {
@@ -184,6 +208,142 @@ function suggestionSummary(suggestion: AutoAssignSuggestion): string {
                         verschoben
                     </div>
                 </div>
+
+                <div
+                    v-if="result.assigned_tasks?.length > 0"
+                    class="max-h-80 space-y-3 overflow-y-auto"
+                >
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-medium">
+                            Zugewiesene Aufgaben
+                        </h3>
+                        <p class="text-xs text-muted-foreground">
+                            Details zu den automatisch zugewiesenen Aufgaben und
+                            ihren Ressourcen.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 rounded-md border p-3">
+                        <div
+                            v-for="entry in result.assigned_tasks"
+                            :key="entry.task.id"
+                            class="rounded-md border bg-muted/40 p-2 text-sm"
+                        >
+                            <div class="flex items-center gap-2">
+                                <CheckCircle
+                                    class="size-3.5 text-emerald-600 dark:text-emerald-400"
+                                />
+                                <span class="font-medium">
+                                    {{ entry.task.title }}
+                                </span>
+                                <Badge
+                                    :variant="
+                                        priorityBadgeVariant(
+                                            entry.task.priority,
+                                        )
+                                    "
+                                >
+                                    {{
+                                        priorityLabels[entry.task.priority] ??
+                                        entry.task.priority
+                                    }}
+                                </Badge>
+                            </div>
+
+                            <div
+                                class="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground"
+                            >
+                                <span>
+                                    {{
+                                        formatPeriod(
+                                            entry.task.starts_at,
+                                            entry.task.ends_at,
+                                        )
+                                    }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <Clock class="size-3" />
+                                    {{
+                                        formatEffort(
+                                            entry.task.effort_value,
+                                            entry.task.effort_unit,
+                                        )
+                                    }}
+                                    Aufwand
+                                </span>
+                            </div>
+
+                            <div class="mt-1.5 space-y-1 pl-4">
+                                <div
+                                    v-for="resource in entry.resources"
+                                    :key="resource.id"
+                                    class="flex items-center gap-1.5 text-xs text-muted-foreground"
+                                >
+                                    <User class="size-3" />
+                                    <span class="font-medium text-foreground">
+                                        {{ resource.name }}
+                                    </span>
+                                    <span>
+                                        {{
+                                            formatAllocation(
+                                                resource.allocation_ratio,
+                                            )
+                                        }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <template v-if="result.skipped_tasks?.length > 0">
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-medium">
+                            Übersprungene Aufgaben
+                        </h3>
+                        <p class="text-xs text-muted-foreground">
+                            Diese Aufgaben konnten nicht automatisch zugewiesen
+                            werden.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 rounded-md border p-3">
+                        <div
+                            v-for="entry in result.skipped_tasks"
+                            :key="entry.task.id"
+                            class="rounded-md border bg-muted/40 p-2 text-sm"
+                        >
+                            <div class="flex items-center gap-2">
+                                <SkipForward
+                                    class="size-3.5 text-muted-foreground"
+                                />
+                                <span class="font-medium">
+                                    {{ entry.task.title }}
+                                </span>
+                                <Badge
+                                    :variant="
+                                        priorityBadgeVariant(
+                                            entry.task.priority,
+                                        )
+                                    "
+                                >
+                                    {{
+                                        priorityLabels[entry.task.priority] ??
+                                        entry.task.priority
+                                    }}
+                                </Badge>
+                            </div>
+                            <div
+                                class="mt-1 text-xs text-amber-600 dark:text-amber-400"
+                            >
+                                {{
+                                    skipReasonLabels[entry.reason] ??
+                                    entry.reason
+                                }}
+                            </div>
+                        </div>
+                    </div>
+                </template>
 
                 <template v-if="rescheduledCount > 0">
                     <div class="space-y-1">

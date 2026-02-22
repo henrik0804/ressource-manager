@@ -25,6 +25,8 @@ test('auto assign controller creates automated assignments', function (): void {
     $task = Task::factory()->create([
         'starts_at' => CarbonImmutable::parse('2026-02-10 08:00:00'),
         'ends_at' => CarbonImmutable::parse('2026-02-12 18:00:00'),
+        'effort_value' => 16,
+        'effort_unit' => 'hours',
     ]);
 
     TaskRequirement::factory()->create([
@@ -33,7 +35,10 @@ test('auto assign controller creates automated assignments', function (): void {
         'required_level' => QualificationLevel::Intermediate,
     ]);
 
-    $resource = Resource::factory()->create();
+    $resource = Resource::factory()->create([
+        'capacity_value' => 8,
+        'capacity_unit' => 'hours_per_day',
+    ]);
 
     ResourceQualification::factory()->create([
         'resource_id' => $resource->id,
@@ -48,7 +53,13 @@ test('auto assign controller creates automated assignments', function (): void {
         ->assertJson([
             'assigned' => 1,
             'skipped' => 0,
-        ]);
+        ])
+        ->assertJsonCount(1, 'assigned_tasks')
+        ->assertJsonPath('assigned_tasks.0.task.id', $task->id)
+        ->assertJsonPath('assigned_tasks.0.resources.0.id', $resource->id)
+        ->assertJsonPath('assigned_tasks.0.task.effort_value', 16)
+        ->assertJsonPath('assigned_tasks.0.task.effort_unit', 'hours')
+        ->assertJsonCount(0, 'skipped_tasks');
 
     $assignment = TaskAssignment::query()->where('task_id', $task->id)->first();
 
@@ -69,6 +80,8 @@ test('auto assign controller returns suggestions when conflicts block assignment
         'priority' => 'high',
         'starts_at' => CarbonImmutable::parse('2026-03-01 08:00:00'),
         'ends_at' => CarbonImmutable::parse('2026-03-05 18:00:00'),
+        'effort_value' => 16,
+        'effort_unit' => 'hours',
     ]);
 
     TaskRequirement::factory()->create([
@@ -79,8 +92,8 @@ test('auto assign controller returns suggestions when conflicts block assignment
 
     $resource = Resource::factory()->create([
         'name' => 'Max Mustermann',
-        'capacity_value' => 1,
-        'capacity_unit' => 'slots',
+        'capacity_value' => 8,
+        'capacity_unit' => 'hours_per_day',
     ]);
 
     ResourceQualification::factory()->create([
@@ -101,7 +114,7 @@ test('auto assign controller returns suggestions when conflicts block assignment
         'resource_id' => $resource->id,
         'starts_at' => CarbonImmutable::parse('2026-03-01 08:00:00'),
         'ends_at' => CarbonImmutable::parse('2026-03-05 18:00:00'),
-        'allocation_ratio' => 1,
+        'allocation_ratio' => 8,
         'assignment_source' => AssignmentSource::Manual,
     ]);
 
@@ -112,9 +125,13 @@ test('auto assign controller returns suggestions when conflicts block assignment
     $data = $response->json();
 
     expect($data)
-        ->toHaveKeys(['assigned', 'skipped', 'suggestions'])
+        ->toHaveKeys(['assigned', 'skipped', 'assigned_tasks', 'skipped_tasks', 'suggestions'])
         ->assigned->toBe(0)
         ->skipped->toBe(1);
+
+    expect($data['skipped_tasks'])->toHaveCount(1);
+    expect($data['skipped_tasks'][0]['task']['id'])->toBe($highPriorityTask->id);
+    expect($data['skipped_tasks'][0]['reason'])->toBe('resource_conflicts');
 
     expect($data['suggestions'])->toHaveCount(1);
 
@@ -163,6 +180,8 @@ test('auto assign controller reschedules lower priority tasks when allowed', fun
         'status' => 'planned',
         'starts_at' => $taskStartsAt,
         'ends_at' => $taskEndsAt,
+        'effort_value' => 8,
+        'effort_unit' => 'hours',
     ]);
 
     TaskRequirement::factory()->create([
@@ -172,8 +191,8 @@ test('auto assign controller reschedules lower priority tasks when allowed', fun
     ]);
 
     $resource = Resource::factory()->create([
-        'capacity_value' => 1,
-        'capacity_unit' => 'slots',
+        'capacity_value' => 8,
+        'capacity_unit' => 'hours_per_day',
     ]);
 
     ResourceQualification::factory()->create([
@@ -195,7 +214,7 @@ test('auto assign controller reschedules lower priority tasks when allowed', fun
         'resource_id' => $resource->id,
         'starts_at' => $taskStartsAt,
         'ends_at' => $taskEndsAt,
-        'allocation_ratio' => 1,
+        'allocation_ratio' => 8,
         'assignment_source' => AssignmentSource::Manual,
     ]);
 
@@ -205,7 +224,11 @@ test('auto assign controller reschedules lower priority tasks when allowed', fun
         ->assertSuccessful()
         ->assertJsonPath('assigned', 1)
         ->assertJsonPath('skipped', 0)
-        ->assertJsonPath('rescheduled.0.assignment_id', $lowPriorityAssignment->id);
+        ->assertJsonPath('rescheduled.0.assignment_id', $lowPriorityAssignment->id)
+        ->assertJsonCount(1, 'assigned_tasks')
+        ->assertJsonPath('assigned_tasks.0.task.id', $highPriorityTask->id)
+        ->assertJsonPath('assigned_tasks.0.resources.0.id', $resource->id)
+        ->assertJsonCount(0, 'skipped_tasks');
 
     $lowPriorityAssignment->refresh();
 

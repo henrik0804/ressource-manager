@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Concerns\CapacityHelper;
 use App\Enums\AssignmentSource;
+use App\Enums\CapacityUnit;
 use App\Enums\ConflictType;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
@@ -36,7 +37,7 @@ final readonly class AutoAssignAction
     ) {}
 
     /**
-     * @return array{assigned: int, skipped: int, rescheduled: list<array{assignment_id: int, task_id: int, task_title: string, task_priority: string, previous_starts_at: string|null, previous_ends_at: string|null, starts_at: string|null, ends_at: string|null}>, suggestions: list<array{task: array{id: int, title: string, priority: string, starts_at: string|null, ends_at: string|null}, resources: list<array{resource: array{id: int, name: string, utilization_percentage: float|null}, conflict_types: list<string>, blocking_assignments: list<array{id: int, task_id: int, task_title: string, task_priority: string, starts_at: string|null, ends_at: string|null, assignment_source: string}>}>}>}
+     * @return array{assigned: int, skipped: int, assigned_tasks: list<array{task: array{id: int, title: string, priority: string, starts_at: string|null, ends_at: string|null, effort_value: float, effort_unit: string}, resources: list<array{id: int, name: string, allocation_ratio: float}>}>, skipped_tasks: list<array{task: array{id: int, title: string, priority: string, starts_at: string|null, ends_at: string|null}, reason: string}>, rescheduled: list<array{assignment_id: int, task_id: int, task_title: string, task_priority: string, previous_starts_at: string|null, previous_ends_at: string|null, starts_at: string|null, ends_at: string|null}>, suggestions: list<array{task: array{id: int, title: string, priority: string, starts_at: string|null, ends_at: string|null}, resources: list<array{resource: array{id: int, name: string, utilization_percentage: float|null}, conflict_types: list<string>, blocking_assignments: list<array{id: int, task_id: int, task_title: string, task_priority: string, starts_at: string|null, ends_at: string|null, assignment_source: string}>}>}>}
      */
     public function handle(bool $allowPriorityScheduling = false): array
     {
@@ -47,22 +48,42 @@ final readonly class AutoAssignAction
             ->orderBy('starts_at')
             ->get();
 
-        $assigned = 0;
-        $skipped = 0;
+        $assignedTasks = [];
+        $skippedTasks = [];
         $suggestions = [];
         $rescheduled = [];
 
         foreach ($tasks as $task) {
             if ($task->starts_at === null || $task->ends_at === null) {
-                $skipped++;
+                $skippedTasks[] = [
+                    'task' => $this->taskSummary($task),
+                    'reason' => 'missing_dates',
+                ];
 
                 continue;
             }
 
+            $effortHours = $this->effortHours($task);
+
+            if ($effortHours === null || $effortHours <= 0) {
+                $skippedTasks[] = [
+                    'task' => $this->taskSummary($task),
+                    'reason' => 'missing_effort',
+                ];
+
+                continue;
+            }
+
+            $durationDays = $this->durationDays($task->starts_at, $task->ends_at);
+            $allocationPerDay = $this->allocationPerDay($effortHours, $durationDays);
+
             $candidateResources = $this->matchingResources($task->requirements);
 
             if ($candidateResources->isEmpty()) {
-                $skipped++;
+                $skippedTasks[] = [
+                    'task' => $this->taskSummary($task),
+                    'reason' => 'no_qualified_resources',
+                ];
 
                 continue;
             }
@@ -70,67 +91,138 @@ final readonly class AutoAssignAction
             $utilizationByResource = $this->utilizationByResource($task->starts_at, $task->ends_at);
 
             $rankedResources = $candidateResources
-                ->sortBy(fn (Resource $resource) => $utilizationByResource[$resource->id] ?? PHP_FLOAT_MAX)
+                ->sortBy(function ($resource) use ($utilizationByResource): float {
+                    if (! $resource instanceof Resource) {
+                        return PHP_FLOAT_MAX;
+                    }
+
+                    return $utilizationByResource[$resource->id] ?? PHP_FLOAT_MAX;
+                })
                 ->values();
 
             $taskSuggestions = [];
+            $taskRescheduled = [];
+            $taskAssignedResources = [];
             $assignedTask = false;
+            $remainingAllocation = $allocationPerDay;
 
-            foreach ($rankedResources as $resource) {
-                $report = $this->conflictDetection->detect(
-                    resource: $resource,
-                    startsAt: $task->starts_at,
-                    endsAt: $task->ends_at,
-                );
+            try {
+                DB::transaction(function () use (
+                    $allowPriorityScheduling,
+                    $rankedResources,
+                    $task,
+                    $utilizationByResource,
+                    &$remainingAllocation,
+                    &$taskRescheduled,
+                    &$taskSuggestions,
+                    &$taskAssignedResources,
+                ): void {
+                    foreach ($rankedResources as $resource) {
+                        if (! $resource instanceof Resource) {
+                            continue;
+                        }
+                        if ($remainingAllocation <= 0) {
+                            break;
+                        }
 
-                if (! $report->hasConflicts()) {
-                    $this->storeTaskAssignment->handle([
-                        'task_id' => $task->id,
-                        'resource_id' => $resource->id,
-                        'assignment_source' => AssignmentSource::Automated->value,
-                    ]);
+                        $requiredAllocation = $this->requiredAllocation($resource, $remainingAllocation);
 
-                    $assigned++;
-                    $assignedTask = true;
-                    break;
-                }
+                        if ($requiredAllocation === null) {
+                            continue;
+                        }
 
-                $blockingAssignments = $this->blockingAssignments($task, $report);
+                        $report = $this->conflictDetection->detect(
+                            resource: $resource,
+                            startsAt: $task->starts_at,
+                            endsAt: $task->ends_at,
+                            allocationRatio: $requiredAllocation,
+                        );
 
-                if ($allowPriorityScheduling && $blockingAssignments->isNotEmpty()) {
-                    $rescheduledAssignments = $this->attemptPriorityScheduling(
-                        task: $task,
-                        resource: $resource,
-                        blockingAssignments: $blockingAssignments,
-                    );
+                        if (! $report->hasConflicts()) {
+                            $this->storeTaskAssignment->handle([
+                                'task_id' => $task->id,
+                                'resource_id' => $resource->id,
+                                'allocation_ratio' => $requiredAllocation,
+                                'assignment_source' => AssignmentSource::Automated->value,
+                            ]);
 
-                    if ($rescheduledAssignments !== null) {
-                        $rescheduled = array_merge($rescheduled, $rescheduledAssignments);
-                        $assigned++;
-                        $assignedTask = true;
-                        break;
+                            $taskAssignedResources[] = [
+                                'id' => $resource->id,
+                                'name' => $resource->name,
+                                'allocation_ratio' => $requiredAllocation,
+                            ];
+
+                            $remainingAllocation = round($remainingAllocation - $requiredAllocation, 2);
+
+                            continue;
+                        }
+
+                        $blockingAssignments = $this->blockingAssignments($task, $report);
+
+                        if ($allowPriorityScheduling && $blockingAssignments->isNotEmpty()) {
+                            $rescheduledAssignments = $this->attemptPriorityScheduling(
+                                task: $task,
+                                resource: $resource,
+                                blockingAssignments: $blockingAssignments,
+                                allocationPerDay: $requiredAllocation,
+                            );
+
+                            if ($rescheduledAssignments !== null) {
+                                $taskRescheduled = array_merge($taskRescheduled, $rescheduledAssignments);
+
+                                $taskAssignedResources[] = [
+                                    'id' => $resource->id,
+                                    'name' => $resource->name,
+                                    'allocation_ratio' => $requiredAllocation,
+                                ];
+
+                                $remainingAllocation = round($remainingAllocation - $requiredAllocation, 2);
+
+                                continue;
+                            }
+                        }
+
+                        if ($blockingAssignments->isEmpty()) {
+                            continue;
+                        }
+
+                        $taskSuggestions[] = [
+                            'resource' => $this->resourceSummary(
+                                $resource,
+                                $utilizationByResource[$resource->id] ?? null,
+                            ),
+                            'conflict_types' => $this->conflictTypes($report),
+                            'blocking_assignments' => $blockingAssignments
+                                ->map(fn (TaskAssignment $assignment) => $this->assignmentSummary($assignment))
+                                ->values()
+                                ->all(),
+                        ];
                     }
-                }
 
-                if ($blockingAssignments->isEmpty()) {
-                    continue;
-                }
+                    if ($remainingAllocation > 0) {
+                        throw new RuntimeException('Unable to allocate full effort.');
+                    }
+                });
 
-                $taskSuggestions[] = [
-                    'resource' => $this->resourceSummary(
-                        $resource,
-                        $utilizationByResource[$resource->id] ?? null,
-                    ),
-                    'conflict_types' => $this->conflictTypes($report),
-                    'blocking_assignments' => $blockingAssignments
-                        ->map(fn (TaskAssignment $assignment) => $this->assignmentSummary($assignment))
-                        ->values()
-                        ->all(),
+                $assignedTask = true;
+
+                $assignedTasks[] = [
+                    'task' => $this->taskEffortSummary($task),
+                    'resources' => $taskAssignedResources,
                 ];
+
+                if ($taskRescheduled !== []) {
+                    $rescheduled = array_merge($rescheduled, $taskRescheduled);
+                }
+            } catch (Throwable) {
+                $assignedTask = false;
             }
 
             if (! $assignedTask) {
-                $skipped++;
+                $skippedTasks[] = [
+                    'task' => $this->taskSummary($task),
+                    'reason' => $taskSuggestions !== [] ? 'resource_conflicts' : 'insufficient_capacity',
+                ];
 
                 if ($taskSuggestions !== []) {
                     $suggestions[] = [
@@ -142,8 +234,10 @@ final readonly class AutoAssignAction
         }
 
         return [
-            'assigned' => $assigned,
-            'skipped' => $skipped,
+            'assigned' => count($assignedTasks),
+            'skipped' => count($skippedTasks),
+            'assigned_tasks' => $assignedTasks,
+            'skipped_tasks' => $skippedTasks,
             'rescheduled' => $rescheduled,
             'suggestions' => $suggestions,
         ];
@@ -252,14 +346,18 @@ final readonly class AutoAssignAction
      * @param  Collection<int, TaskAssignment>  $blockingAssignments
      * @return list<array{assignment_id: int, task_id: int, task_title: string, task_priority: string, previous_starts_at: string|null, previous_ends_at: string|null, starts_at: string|null, ends_at: string|null}>|null
      */
-    private function attemptPriorityScheduling(Task $task, Resource $resource, Collection $blockingAssignments): ?array
-    {
+    private function attemptPriorityScheduling(
+        Task $task,
+        Resource $resource,
+        Collection $blockingAssignments,
+        float $allocationPerDay,
+    ): ?array {
         if ($task->starts_at === null || $task->ends_at === null) {
             return null;
         }
 
         try {
-            return DB::transaction(function () use ($task, $resource, $blockingAssignments): array {
+            return DB::transaction(function () use ($task, $resource, $blockingAssignments, $allocationPerDay): array {
                 $rescheduled = $this->rescheduleBlockingAssignments($task, $resource, $blockingAssignments);
 
                 if ($rescheduled === null) {
@@ -270,6 +368,7 @@ final readonly class AutoAssignAction
                     resource: $resource,
                     startsAt: $task->starts_at,
                     endsAt: $task->ends_at,
+                    allocationRatio: $allocationPerDay,
                 );
 
                 if ($report->hasConflicts()) {
@@ -279,6 +378,7 @@ final readonly class AutoAssignAction
                 $this->storeTaskAssignment->handle([
                     'task_id' => $task->id,
                     'resource_id' => $resource->id,
+                    'allocation_ratio' => round($allocationPerDay, 2),
                     'assignment_source' => AssignmentSource::Automated->value,
                 ]);
 
@@ -425,6 +525,48 @@ final readonly class AutoAssignAction
         return (int) $start->diffInMinutes($end, false);
     }
 
+    private function durationDays(DateTimeInterface $startsAt, DateTimeInterface $endsAt): int
+    {
+        $days = $this->countSpannedDays($startsAt, $endsAt);
+
+        return max($days, 1);
+    }
+
+    private function effortHours(Task $task): ?float
+    {
+        if ($task->effort_value === null || $task->effort_unit === null) {
+            return null;
+        }
+
+        return $task->effort_unit->toHours((float) $task->effort_value);
+    }
+
+    private function allocationPerDay(float $effortHours, int $durationDays): float
+    {
+        if ($durationDays <= 0) {
+            return 0.0;
+        }
+
+        return round($effortHours / $durationDays, 2);
+    }
+
+    private function requiredAllocation(Resource $resource, float $allocationPerDay): ?float
+    {
+        if ($resource->capacity_unit !== CapacityUnit::HoursPerDay) {
+            return null;
+        }
+
+        $capacityPerDay = $this->resolveCapacity($resource);
+
+        if ($capacityPerDay <= 0 || $allocationPerDay <= 0) {
+            return null;
+        }
+
+        $allocation = min($allocationPerDay, $capacityPerDay);
+
+        return round($allocation, 2);
+    }
+
     private function laterOf(DateTimeInterface $first, DateTimeInterface $second): CarbonImmutable
     {
         $firstCarbon = $this->toCarbon($first);
@@ -444,6 +586,18 @@ final readonly class AutoAssignAction
             'priority' => $task->priority->value,
             'starts_at' => $task->starts_at?->toDateTimeString(),
             'ends_at' => $task->ends_at?->toDateTimeString(),
+        ];
+    }
+
+    /**
+     * @return array{id: int, title: string, priority: string, starts_at: string|null, ends_at: string|null, effort_value: float, effort_unit: string}
+     */
+    private function taskEffortSummary(Task $task): array
+    {
+        return [
+            ...$this->taskSummary($task),
+            'effort_value' => (float) $task->effort_value,
+            'effort_unit' => $task->effort_unit?->value ?? 'hours',
         ];
     }
 
