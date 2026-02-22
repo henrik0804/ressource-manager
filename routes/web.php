@@ -18,6 +18,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TaskAssignmentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskRequirementController;
+use App\Http\Controllers\TaskStaffingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UtilizationController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('task-requirements', TaskRequirementController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('task-assignments', TaskAssignmentController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('task-assignments/auto-assign', AutoAssignController::class)->name('task-assignments.auto-assign');
+    Route::get('task-staffing', TaskStaffingController::class)->name('task-staffing');
     Route::get('my-assignments', [MyAssignmentController::class, 'index'])->name('my-assignments.index');
     Route::put('my-assignments/{my_assignment}', [MyAssignmentController::class, 'update'])->name('my-assignments.update');
     Route::post('check-conflicts', CheckConflictsController::class)->name('check-conflicts');

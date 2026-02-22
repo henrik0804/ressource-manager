@@ -17,6 +17,7 @@ import {
     Medal,
     Package,
     Shield,
+    UserCheck,
     Users,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -34,7 +35,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { AccessSections, type AccessSection } from '@/lib/access-sections';
-import { dashboard, schedule, utilization } from '@/routes';
+import { dashboard, schedule, taskStaffing, utilization } from '@/routes';
 import { index as myAssignmentsIndex } from '@/routes/my-assignments';
 import { index as permissionsIndex } from '@/routes/permissions';
 import { index as qualificationsIndex } from '@/routes/qualifications';
@@ -150,6 +151,14 @@ const taskNavItems = computed<NavItem[]>(() => {
             title: 'Zuweisungen',
             href: taskAssignmentsIndex(),
             icon: LinkIcon,
+        });
+    }
+
+    if (canAccess([AccessSections.ManualAssignment])) {
+        items.push({
+            title: 'Besetzung',
+            href: taskStaffing(),
+            icon: UserCheck,
         });
     }
 
